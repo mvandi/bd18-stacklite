@@ -7,8 +7,6 @@ import it.unibo.bd18.util._
 
 private[stacklite] trait StackliteApp extends SQLApp {
 
-  implicit val df: DateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'")
-
   import implicits._
   import SQLImplicits._
 

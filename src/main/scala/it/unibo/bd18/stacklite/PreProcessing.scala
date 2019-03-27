@@ -15,7 +15,6 @@ object PreProcessing extends SQLApp {
 
   val questionsSrcPath: String = args(0)
   val questionsDestPath: String = args(1)
-
   val questionTagsSrcPath: String = args(2)
   val questionTagsDestPath: String = args(3)
 
@@ -24,7 +23,6 @@ object PreProcessing extends SQLApp {
 
   val startDate = sc.broadcast(df.parse("2012-01-01T00:00:00Z"))
   val endDate = sc.broadcast(df.parse("2017-01-01T00:00:00Z"))
-
   val (questions, questionTags) = questionsRDD
     .filter(x => x.creationDate.between(startDate.value, endDate.value))
     .keyBy(_.id)

@@ -6,18 +6,19 @@ import org.apache.spark.SparkContext
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.{DataFrame, Row, SQLContext, SparkSession}
 
+import scala.language.implicitConversions
 import scala.reflect.ClassTag
 
 package object implicits {
 
-  implicit class RichSeq[T: ClassTag](private val seq: Seq[T]) {
-    def toRDD(parallelism: Int)(implicit sc: SparkContext): RDD[T] = sc.makeRDD(seq, parallelism)
+  implicit class RichSeq[T: ClassTag](private val t: TraversableOnce[T]) {
+    def toRDD(parallelism: Int)(implicit sc: SparkContext): RDD[T] = sc.makeRDD(t.toSeq, parallelism)
 
     def toRDD(implicit sc: SparkContext): RDD[T] = toRDD(sc.defaultParallelism)
   }
 
-  implicit class RichSeqWithNewPartitions[T: ClassTag](private val seq: Seq[(T, Seq[String])]) {
-    def toRDD(implicit sc: SparkContext): RDD[T] = sc.makeRDD(seq)
+  implicit class RichSeqWithNewPartitions[T: ClassTag](private val t: TraversableOnce[(T, TraversableOnce[String])]) {
+    def toRDD(implicit sc: SparkContext): RDD[T] = sc.makeRDD(t.toSeq.map(x => (x._1, x._2.toSeq)))
   }
 
   implicit class RichSparkContext(private val sc: SparkContext) {
@@ -38,10 +39,11 @@ package object implicits {
       .csv(path)
       .rdd
 
-    def readCSVHeader(path: String): RDD[String] = spark.sparkContext.parallelize(readCSV(path, header = false)
+    def readCSVHeader(path: String): RDD[String] = readCSV(path, header = false)
       .take(1)
       .map(_.mkString(","))
-      .toSeq)
+      .toSeq
+      .toRDD(spark.sparkContext)
   }
 
   implicit class RichSQLContext(private val sqlContext: SQLContext) {

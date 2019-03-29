@@ -19,8 +19,8 @@ object PreProcessing extends SparkApp {
   val questionsRDD = spark.readCSV(questionsSrcPath).map(QuestionData.extract)
   val questionTagsRDD = spark.readCSV(questionTagsSrcPath).map(QuestionTagData.extract)
 
-  val startDate = df.parse("2011-12-31T23:59:59Z")
-  val endDate = df.parse("2017-01-01T00:00:00Z")
+  val startDate = df.parse("2012-01-01T00:00:00Z")
+  val endDate = df.parse("2016-12-31T23:59:59Z")
 
   val (questions, questionTags) = questionsRDD
     .filter(_.creationDate.between(startDate, endDate))

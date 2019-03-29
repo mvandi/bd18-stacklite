@@ -9,7 +9,7 @@ trait SparkApp extends App {
 
   protected[this] final lazy val spark = SparkSession.builder.config(conf).getOrCreate()
 
-  protected[this] final def sc: SparkContext = spark.sparkContext
+  @inline protected[this] final def sc: SparkContext = spark.sparkContext
 
   object implicits {
     implicit lazy val _sc: SparkContext = sc

@@ -17,7 +17,7 @@ object QuestionTagData {
     getId(row),
     getTag(row))
 
-  private def getId(row: Row): Int = row.getInt(0)
+  private def getId(row: Row): Int = row.getString(0).toInt
 
   private def getTag(row: Row): String = row.getString(1)
 

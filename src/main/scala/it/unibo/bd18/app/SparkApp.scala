@@ -1,9 +1,18 @@
 package it.unibo.bd18.app
 
-import org.apache.spark.SparkContext
+import org.apache.spark.sql.SparkSession
+import org.apache.spark.{SparkConf, SparkContext}
 
-trait SparkApp extends SparkAppBase {
+trait SparkApp extends App {
 
-  protected[this] override final lazy val sc: SparkContext = SparkContext.getOrCreate(conf)
+  protected[this] val conf: SparkConf = new SparkConf()
+
+  protected[this] final lazy val spark = SparkSession.builder.config(conf).getOrCreate()
+
+  protected[this] final def sc: SparkContext = spark.sparkContext
+
+  object implicits {
+    implicit lazy val _sc: SparkContext = sc
+  }
 
 }

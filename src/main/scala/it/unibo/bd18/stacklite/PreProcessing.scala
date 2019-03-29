@@ -1,44 +1,43 @@
 package it.unibo.bd18.stacklite
 
-import it.unibo.bd18.app.SQLApp
-import it.unibo.bd18.util._
+import it.unibo.bd18.app.SparkApp
 import org.apache.spark.{HashPartitioner, SparkConf}
 
-object PreProcessing extends SQLApp {
+object PreProcessing extends SparkApp {
 
-  import SQLImplicits._
+  import QuestionData.df
   import implicits._
   import it.unibo.bd18.util.implicits._
-  import QuestionData.df
 
   override protected[this] val conf: SparkConf = new SparkConf().setAppName("PreProcessing")
 
-  val questionsSrcPath: String = args(0)
-  val questionsDestPath: String = args(1)
-  val questionTagsSrcPath: String = args(2)
-  val questionTagsDestPath: String = args(3)
+  val questionsSrcPath = args(0)
+  val questionsDestPath = args(1)
+  val questionTagsSrcPath = args(2)
+  val questionTagsDestPath = args(3)
 
-  val questionsRDD = loadCSV(questionsSrcPath).map(QuestionData.extract)
-  val questionTagsRDD = loadCSV(questionTagsSrcPath).map(QuestionTagData.extract)
+  val questionsRDD = spark.readCSV(questionsSrcPath).map(QuestionData.extract)
+  val questionTagsRDD = spark.readCSV(questionTagsSrcPath).map(QuestionTagData.extract)
 
-  val startDate = sc.broadcast(df.parse("2012-01-01T00:00:00Z"))
-  val endDate = sc.broadcast(df.parse("2017-01-01T00:00:00Z"))
+  val startDate = df.parse("2011-12-31T23:59:59Z")
+  val endDate = df.parse("2017-01-01T00:00:00Z")
+
   val (questions, questionTags) = questionsRDD
-    .filter(x => x.creationDate.between(startDate.value, endDate.value))
+    .filter(_.creationDate.between(startDate, endDate))
     .keyBy(_.id)
-    .partitionBy(new HashPartitioner(4 * sc.coreCount))
+    .partitionBy(new HashPartitioner(sc.coreCount))
     .join(questionTagsRDD.keyBy(_.id))
     .map(_._2)
     .collect
     .unzip
 
-  loadCSVHeader(questionsSrcPath)
+  spark.readCSVHeader(questionsSrcPath)
     .union(questions
       .toSeq
       .toRDD
       .map(_.toCSVString))
     .saveAsTextFile(questionsDestPath)
-  loadCSVHeader(questionTagsSrcPath)
+  spark.readCSVHeader(questionTagsSrcPath)
     .union(questionTags
       .toSeq
       .toRDD

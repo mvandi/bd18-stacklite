@@ -21,9 +21,9 @@ trait QuestionData {
 
   def ownerUserId(): Option[Int]
 
-  def answerCount(): Int
+  def answerCount(): Option[Int]
 
-  def toCSVString(): String = s"$id,${df.format(creationDate)},${closedDate.map(df.format).getOrElse("NA")},${deletionDate.map(df.format).getOrElse("NA")},$score,${ownerUserId.map(_.toString).getOrElse("NA")},$answerCount"
+  def toCSVString(): String = s"$id,${df.format(creationDate)},${closedDate.map(df.format).getOrElse("NA")},${deletionDate.map(df.format).getOrElse("NA")},$score,${ownerUserId.map(_.toString).getOrElse("NA")},${answerCount.map(df.format).getOrElse("NA")}"
 
 }
 
@@ -40,7 +40,7 @@ object QuestionData {
 
   val df: DateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'")
 
-  private def getId(row: Row): Int = row.getInt(0)
+  private def getId(row: Row): Int = row.getString(0).toInt
 
   private def getCreationDate(row: Row): Date = df.parse(row.getString(1))
 
@@ -48,11 +48,11 @@ object QuestionData {
 
   private def getDeletionDate(row: Row): Option[Date] = getOption(row)(_.getString(3))(_ != "NA").map(df.parse)
 
-  private def getScore(row: Row): Int = row.getInt(4)
+  private def getScore(row: Row): Int = row.getString(4).toInt
 
   private def getOwnerUserId(row: Row): Option[Int] = getOption(row)(_.getString(5))(_ != "NA").map(_.toInt)
 
-  private def getAnswerCount(row: Row): Int = row.getInt(6)
+  private def getAnswerCount(row: Row): Option[Int] = getOption(row)(_.getString(6))(_ != "NA").map(_.toInt)
 
   private def getOption[T](row: Row)(f: Row => T)(g: T => Boolean): Option[T] = Some(f(row)).filter(g)
 
@@ -63,7 +63,7 @@ object QuestionData {
                                        override val deletionDate: Option[Date],
                                        override val score: Int,
                                        override val ownerUserId: Option[Int],
-                                       override val answerCount: Int
+                                       override val answerCount: Option[Int]
                                      ) extends QuestionData
 
 }

@@ -38,7 +38,7 @@ object QuestionData {
     getOwnerUserId(row),
     getAnswerCount(row))
 
-  val df: DateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'")
+  private[stacklite] val df: DateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'")
 
   private def getId(row: Row): Int = row.getString(0).toInt
 
@@ -54,7 +54,7 @@ object QuestionData {
 
   private def getAnswerCount(row: Row): Option[Int] = getOption(row)(_.getString(6))(_ != "NA").map(_.toInt)
 
-  private def getOption[T](row: Row)(f: Row => T)(g: T => Boolean): Option[T] = Some(f(row)).filter(g)
+  private def getOption[T](row: Row)(f: Row => T)(g: T => Boolean): Option[T] = Some(row).map(f).filter(g)
 
   private case class QuestionDataImpl(
                                        override val id: Int,

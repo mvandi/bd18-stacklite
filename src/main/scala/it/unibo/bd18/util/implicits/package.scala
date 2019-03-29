@@ -52,36 +52,8 @@ package object implicits {
     def flatten: RDD[T] = rdd.filter(_.isDefined).map(_.get)
   }
 
-  implicit class RichPairRDD[K, V](private val rdd: RDD[(K, V)]) {
-    def filterPair(f: (K, V) => Boolean): RDD[(K, V)] = rdd.filter(x => f(x._1, x._2))
-
-    def filterByKey(f: K => Boolean): RDD[(K, V)] = rdd.filter(t => f(t._1))
-
-    def filterByValue(f: V => Boolean): RDD[(K, V)] = rdd.filter(t => f(t._2))
-
-    def flatMapPair[U: ClassTag](f: (K, V) => TraversableOnce[U]): RDD[U] = rdd.flatMap(x => f(x._1, x._2))
-
-    def flatMapKeys[U](f: K => TraversableOnce[U]): RDD[(U, V)] = rdd.flatMap(x => f(x._1).map((_, x._2)))
-
-    def mapPair[U: ClassTag](f: (K, V) => U): RDD[U] = rdd.map(x => f(x._1, x._2))
-
-    def mapKeys[U](f: K => U): RDD[(U, V)] = rdd.map(x => (f(x._1), x._2))
-  }
-
-  implicit class RichKeyOptionRDD[K: ClassTag, V: ClassTag](private val rdd: RDD[(Option[K], V)]) {
-    def flatten: RDD[(K, V)] = rdd.filterByKey(_.isDefined).mapKeys(_.get)
-  }
-
-  implicit class RichValueOptionRDD[K: ClassTag, V: ClassTag](private val rdd: RDD[(K, Option[V])]) {
-    def flatten: RDD[(K, V)] = rdd.filterByValue(_.isDefined).mapValues(_.get)
-  }
-
-  implicit class RichTraversableOnceKeyRDD[K: ClassTag, V: ClassTag](private val rdd: RDD[(TraversableOnce[K], V)]) {
-    def flatten: RDD[(K, V)] = rdd.filterByKey(_.nonEmpty).flatMapKeys(identity)
-  }
-
-  implicit class RichTraversableOnceValueRDD[K: ClassTag, V: ClassTag](private val rdd: RDD[(K, TraversableOnce[V])]) {
-    def flatten: RDD[(K, V)] = rdd.filterByValue(_.nonEmpty).flatMapValues(identity)
+  implicit class RichTraversableOnceRDD[T: ClassTag](private val rdd: RDD[TraversableOnce[T]]) {
+    def flatten: RDD[T] = rdd.filter(_.nonEmpty).flatMap(identity)
   }
 
   implicit def comparableToOrdered[A](c: Comparable[A]): Ordered[A] = new Ordered[A] {

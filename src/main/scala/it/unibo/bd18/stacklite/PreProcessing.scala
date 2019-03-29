@@ -11,13 +11,13 @@ object PreProcessing extends SparkApp {
 
   override protected[this] val conf: SparkConf = new SparkConf().setAppName("PreProcessing")
 
-  val questionsSrcPath = args(0)
+  val questionsSrcFile = args(0)
   val questionsDestPath = args(1)
-  val questionTagsSrcPath = args(2)
+  val questionTagsSrcFile = args(2)
   val questionTagsDestPath = args(3)
 
-  val questionsRDD = spark.readCSV(questionsSrcPath).map(QuestionData.extract)
-  val questionTagsRDD = spark.readCSV(questionTagsSrcPath).map(QuestionTagData.extract)
+  val questionsRDD = spark.readCSV(questionsSrcFile).map(QuestionData.extract)
+  val questionTagsRDD = spark.readCSV(questionTagsSrcFile).map(QuestionTagData.extract)
 
   val startDate = df.parse("2012-01-01T00:00:00Z")
   val endDate = df.parse("2016-12-31T23:59:59Z")
@@ -31,13 +31,13 @@ object PreProcessing extends SparkApp {
     .collect
     .unzip
 
-  spark.readCSVHeader(questionsSrcPath)
+  spark.readCSVHeader(questionsSrcFile)
     .union(questions
       .toSeq
       .toRDD
       .map(_.toCSVString))
     .saveAsTextFile(questionsDestPath)
-  spark.readCSVHeader(questionTagsSrcPath)
+  spark.readCSVHeader(questionTagsSrcFile)
     .union(questionTags
       .toSeq
       .toRDD

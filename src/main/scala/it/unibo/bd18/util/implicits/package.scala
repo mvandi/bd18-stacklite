@@ -11,13 +11,13 @@ import scala.reflect.ClassTag
 
 package object implicits {
 
-  implicit class RichSeq[T: ClassTag](private val t: TraversableOnce[T]) {
+  implicit class RichTraversableOnce[T: ClassTag](private val t: TraversableOnce[T]) {
     def toRDD(parallelism: Int)(implicit sc: SparkContext): RDD[T] = sc.makeRDD(t.toSeq, parallelism)
 
     def toRDD(implicit sc: SparkContext): RDD[T] = toRDD(sc.defaultParallelism)
   }
 
-  implicit class RichSeqWithNewPartitions[T: ClassTag](private val t: TraversableOnce[(T, TraversableOnce[String])]) {
+  implicit class RichTraversableOnceWithNewPartitions[T: ClassTag](private val t: TraversableOnce[(T, TraversableOnce[String])]) {
     def toRDD(implicit sc: SparkContext): RDD[T] = sc.makeRDD(t.toSeq.map(x => (x._1, x._2.toSeq)))
   }
 

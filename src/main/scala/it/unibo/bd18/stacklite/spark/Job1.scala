@@ -1,4 +1,4 @@
-package it.unibo.bd18.stacklite
+package it.unibo.bd18.stacklite.spark
 
 import java.util.{Calendar, Date}
 
@@ -6,7 +6,7 @@ import org.apache.spark.{HashPartitioner, SparkConf}
 
 /**
   * Determine the five tags that received the highest sum of scores for each
-  * year-month pair (sorted in descending order);
+  * year-month pair (tags are sorted in descending order).
   */
 object Job1 extends StackliteApp {
 
@@ -15,18 +15,20 @@ object Job1 extends StackliteApp {
 
   override protected[this] val conf: SparkConf = new SparkConf().setAppName("Job1")
 
-  val result = questionsRDD.keyBy(_.id)
+  questionsRDD.keyBy(_.id)
     .partitionBy(new HashPartitioner(sc.coreCount))
     .join(questionTagsRDD.keyBy(_.id))
-    .map(x => (getYearMonthPair(x._2._1.creationDate), (x._2._2.tag, x._2._1.score)))
-    .groupByKey()
+    .mapPair((_, x) => (getYearMonthPair(x._1.creationDate), (x._2.tag, x._1.score)))
+    .groupByKey
     .mapValues(_.toRDD
       .groupByKey
       .mapValues(_.sum)
       .sortBy(-_._2)
       .map(_._1)
       .take(5)
-      .toList)
+      .mkString("[", ", ", "]"))
+    .mapPair((x, y) => s"$x -> $y")
+    .saveAsTextFile(args(2))
 
   private def getYearMonthPair(d: Date): (Int, Int) = {
     val c = Calendar.getInstance()

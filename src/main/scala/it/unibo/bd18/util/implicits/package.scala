@@ -21,6 +21,14 @@ package object implicits {
     def toRDD(implicit sc: SparkContext): RDD[T] = sc.makeRDD(t.toSeq.map(x => (x._1, x._2.toSeq)))
   }
 
+  implicit class RichPairRDD[K, V](private val rdd: RDD[(K, V)]) {
+    def filterPair(f: (K, V) => Boolean): RDD[(K, V)] = rdd.filter(x => f(x._1, x._2))
+
+    def flatMapPair[U: ClassTag](f: (K, V) => TraversableOnce[U]): RDD[U] = rdd.flatMap(x => f(x._1, x._2))
+
+    def mapPair[U: ClassTag](f: (K, V) => U): RDD[U] = rdd.map(x => f(x._1, x._2))
+  }
+
   implicit class RichSparkContext(private val sc: SparkContext) {
     def executorCount: Int = sc.statusTracker.getExecutorInfos.length - 1
 

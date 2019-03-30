@@ -1,9 +1,9 @@
-package it.unibo.bd18.stacklite
+package it.unibo.bd18.stacklite.spark
 
-import it.unibo.bd18.app.SparkApp
+import it.unibo.bd18.stacklite.QuestionData
 import org.apache.spark.{HashPartitioner, SparkConf}
 
-object PreProcessing extends SparkApp {
+object PreProcessing extends StackliteApp {
 
   import QuestionData.df
   import implicits._
@@ -11,13 +11,8 @@ object PreProcessing extends SparkApp {
 
   override protected[this] val conf: SparkConf = new SparkConf().setAppName("PreProcessing")
 
-  val questionsSrcFile = args(0)
-  val questionsDestPath = args(1)
-  val questionTagsSrcFile = args(2)
+  val questionsDestPath = args(2)
   val questionTagsDestPath = args(3)
-
-  val questionsRDD = spark.readCSV(questionsSrcFile).map(QuestionData.extract)
-  val questionTagsRDD = spark.readCSV(questionTagsSrcFile).map(QuestionTagData.extract)
 
   val startDate = df.parse("2012-01-01T00:00:00Z")
   val endDate = df.parse("2016-12-31T23:59:59Z")
@@ -31,13 +26,13 @@ object PreProcessing extends SparkApp {
     .collect
     .unzip
 
-  spark.readCSVHeader(questionsSrcFile)
+  spark.readCSVHeader(args(0))
     .union(questions
       .toSeq
       .toRDD
       .map(_.toCSVString))
     .saveAsTextFile(questionsDestPath)
-  spark.readCSVHeader(questionTagsSrcFile)
+  spark.readCSVHeader(args(1))
     .union(questionTags
       .toSeq
       .toRDD

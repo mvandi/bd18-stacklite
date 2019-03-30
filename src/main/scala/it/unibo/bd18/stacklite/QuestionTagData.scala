@@ -1,10 +1,9 @@
 package it.unibo.bd18.stacklite
 
-import org.apache.spark.sql.Row
-
 trait QuestionTagData {
 
   def id(): Int
+
   def tag(): String
 
   def toCSVString(): String = s"$id,$tag"
@@ -13,17 +12,19 @@ trait QuestionTagData {
 
 object QuestionTagData {
 
-  def extract(row: Row): QuestionTagData = QuestionTagDataImpl(
+  def apply(row: Array[String]): QuestionTagData = create(row)
+
+  def create(row: Array[String]): QuestionTagData = QuestionTagDataImpl(
     getId(row),
     getTag(row))
 
-  private def getId(row: Row): Int = row.getString(0).toInt
+  private def getId(row: Array[String]): Int = row(0).toInt
 
-  private def getTag(row: Row): String = row.getString(1)
+  private def getTag(row: Array[String]): String = row(1)
 
   private case class QuestionTagDataImpl(
-                                       override val id: Int,
-                                       override val tag: String
-                                     ) extends QuestionTagData
+                                          override val id: Int,
+                                          override val tag: String
+                                        ) extends QuestionTagData
 
 }

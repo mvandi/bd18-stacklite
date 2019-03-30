@@ -21,8 +21,8 @@ object Job1 extends StackliteApp {
     .map(x => (getYearMonthPair(x._2._1.creationDate), (x._2._2.tag, x._2._1.score)))
     .groupByKey()
     .mapValues(_.toRDD
-      .groupBy(_._1)
-      .mapValues(_.map(_._2).sum)
+      .groupByKey
+      .mapValues(_.sum)
       .sortBy(-_._2)
       .map(_._1)
       .take(5)

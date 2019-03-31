@@ -5,7 +5,7 @@ import java.util.Date
 
 import it.unibo.bd18.stacklite.QuestionData.df
 
-trait QuestionData {
+sealed trait QuestionData {
 
   def id(): Int
 

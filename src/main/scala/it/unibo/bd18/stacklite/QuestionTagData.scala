@@ -1,6 +1,6 @@
 package it.unibo.bd18.stacklite
 
-trait QuestionTagData {
+sealed trait QuestionTagData {
 
   def id(): Int
 

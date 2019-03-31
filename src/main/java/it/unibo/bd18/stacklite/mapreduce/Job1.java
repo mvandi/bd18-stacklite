@@ -1,5 +1,6 @@
 package it.unibo.bd18.stacklite.mapreduce;
 
+import it.unibo.bd18.stacklite.Utils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.FileSystem;
@@ -11,7 +12,6 @@ import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.input.MultipleInputs;
-import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
@@ -23,14 +23,20 @@ public final class Job1 extends Configured implements Tool {
     public static class QuestionMapper extends Mapper<Object, Text, IntWritable, Text> {
         @Override
         protected void map(Object key, Text value, Context context) throws IOException, InterruptedException {
-            throw new UnsupportedOperationException("QuestionMapper not implemented");
+            final String row = value.toString();
+            if (!Utils.isHeader(row)) {
+                throw new UnsupportedOperationException("QuestionMapper not implemented");
+            }
         }
     }
 
     public static class QuestionTagMapper extends Mapper<Object, Text, IntWritable, Text> {
         @Override
         protected void map(Object key, Text value, Context context) throws IOException, InterruptedException {
-            throw new UnsupportedOperationException("QuestionTagMapper not implemented");
+            final String row = value.toString();
+            if (!Utils.isHeader(row)) {
+                throw new UnsupportedOperationException("QuestionTagMapper not implemented");
+            }
         }
     }
 

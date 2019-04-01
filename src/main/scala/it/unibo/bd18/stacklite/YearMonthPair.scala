@@ -4,9 +4,9 @@ import java.util.{Calendar, Date}
 
 sealed trait YearMonthPair {
 
-  def month(): Int
-
   def year(): Int
+
+  def month(): Int
 
   override def toString: String = YearMonthPair.format(year, month)
 
@@ -35,8 +35,8 @@ object YearMonthPair {
   }
 
   private case class YearMonthPairImpl(
-                                        override val month: Int,
-                                        override val year: Int
+                                        override val year: Int,
+                                        override val month: Int
                                       ) extends YearMonthPair {
 
   }

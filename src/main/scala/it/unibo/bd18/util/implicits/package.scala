@@ -21,6 +21,10 @@ package object implicits {
     def toRDD(implicit sc: SparkContext): RDD[T] = sc.makeRDD(t.toSeq.map(x => (x._1, x._2.toSeq)))
   }
 
+  implicit class RichKeyValueTraversable[K, V](private val t: Traversable[(K, V)]) {
+    def groupByKey: Map[K, Traversable[V]] = t.groupBy(_._1).mapValues(_.map(_._2))
+  }
+
   implicit class RichPairRDD[K, V](private val rdd: RDD[(K, V)]) {
     def filterPair(f: (K, V) => Boolean): RDD[(K, V)] = rdd.filter(x => f(x._1, x._2))
 

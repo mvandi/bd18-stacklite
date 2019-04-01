@@ -29,7 +29,7 @@ object Job1 extends StackliteApp {
     .mapValues(_.toRDD
       .groupByKey
       .mapValues(_.sum)
-      .sortBy(-_._2)
+      .sortBy(_._2, ascending = false)
       .map(_._1)
       .take(5)
       .mkString("[", ", ", "]"))

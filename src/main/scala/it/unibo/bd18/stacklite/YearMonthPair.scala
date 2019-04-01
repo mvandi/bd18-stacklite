@@ -8,7 +8,7 @@ sealed trait YearMonthPair {
 
   def year(): Int
 
-  override def toString: String = s"($year, $month)"
+  override def toString: String = YearMonthPair.format(year, month)
 
 }
 
@@ -17,9 +17,21 @@ object YearMonthPair {
   def apply(d: Date): YearMonthPair = create(d)
 
   def create(d: Date): YearMonthPair = {
+    val (year, month) = tupled(d)
+    YearMonthPairImpl(year,  month)
+  }
+
+  def format(d: Date): String = {
+    val (year, month) = tupled(d)
+    format(year, month)
+  }
+
+  private def format(year: Int, month: Int): String = s"($year, $month)"
+
+  private def tupled(d: Date): (Int, Int) = {
     val c = Calendar.getInstance()
     c.setTime(d)
-    YearMonthPairImpl(c.get(Calendar.YEAR), c.get(Calendar.MONTH) + 1)
+    (c.get(Calendar.YEAR), c.get(Calendar.MONTH) + 1)
   }
 
   private case class YearMonthPairImpl(

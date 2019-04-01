@@ -13,7 +13,7 @@ object Job1 extends StackliteApp {
   import implicits._
   import it.unibo.bd18.util.implicits._
 
-  override protected[this] val conf: SparkConf = new SparkConf().setAppName("Job1")
+  override protected[this] val conf = new SparkConf().setAppName("Job1")
 
   val resultPath = new Path(args(2))
   val fs = FileSystem.get(sc.hadoopConfiguration)

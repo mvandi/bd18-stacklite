@@ -8,7 +8,6 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.ObjectWritable;
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.mapred.JobTracker;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.Reducer;
@@ -31,26 +30,35 @@ public final class Job1 extends Configured implements Tool {
     private static final QuestionTagData$ QuestionTagData = QuestionTagData$.MODULE$;
     private static final YearMonthPair$ YearMonthPair = YearMonthPair$.MODULE$;
 
-    public static class QuestionMapper extends Mapper<Object, Text, IntWritable, ObjectWritable> {
+    private static abstract class AbstractRowMapper<T> extends Mapper<Object, Text, IntWritable, ObjectWritable> {
         @Override
-        protected void map(Object ignore, Text value, Context context) throws IOException, InterruptedException {
+        protected final void map(Object ignore, Text value, Context context) throws IOException, InterruptedException {
             final String row = value.toString();
             if (!Utils.isHeader(row)) {
-                final QuestionData q = QuestionData.create(row.split("\\s*,+\\s*"));
-                context.write(new IntWritable(q.id()), new ObjectWritable(q));
+                final T t = converter(row.split("\\s*,\\s*"));
+                context.write(new IntWritable(keyExtractor(t)), new ObjectWritable(t));
             }
         }
+
+        protected abstract T converter(String[] row);
+
+        protected abstract int keyExtractor(T t);
     }
 
-    public static class QuestionTagMapper extends Mapper<Object, Text, IntWritable, ObjectWritable> {
+    public static final class QuestionMapper extends AbstractRowMapper<QuestionData> {
         @Override
-        protected void map(Object ignore, Text value, Context context) throws IOException, InterruptedException {
-            final String row = value.toString();
-            if (!Utils.isHeader(row)) {
-                final QuestionTagData qt = QuestionTagData.create(row.split("\\s*,+\\s*"));
-                context.write(new IntWritable(qt.id()), new ObjectWritable(qt));
-            }
-        }
+        protected QuestionData converter(String[] row) { return QuestionData.create(row); }
+
+        @Override
+        protected int keyExtractor(QuestionData question) { return question.id(); }
+    }
+
+    public static final class QuestionTagMapper extends AbstractRowMapper<QuestionTagData> {
+        @Override
+        protected QuestionTagData converter(String[] row) { return QuestionTagData.create(row); }
+
+        @Override
+        protected int keyExtractor(QuestionTagData tag) { return tag.id(); }
     }
 
     public static class Combiner extends Reducer<IntWritable, ObjectWritable, Text, ObjectWritable> {
@@ -71,7 +79,7 @@ public final class Job1 extends Configured implements Tool {
             }
 
             if (question != null && !tags.isEmpty()) {
-                final Text key = new Text(YearMonthPair.create(question.creationDate()).toString());
+                final Text key = new Text(YearMonthPair.format(question.creationDate()));
 
                 final int score = question.score();
 
@@ -129,7 +137,7 @@ public final class Job1 extends Configured implements Tool {
         FileOutputFormat.setOutputPath(job, resultPath);
 
         job.setCombinerClass(Combiner.class);
-        job.setReducerClass(Combiner.class);
+        job.setReducerClass(Finisher.class);
 
         return job.waitForCompletion(true) ? 1 : 0;
     }

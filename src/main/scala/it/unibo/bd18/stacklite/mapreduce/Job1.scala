@@ -23,7 +23,7 @@ object Job1 extends ConfiguredTool("Job1") with App {
   import it.unibo.bd18.util.implicits._
 
   protected abstract class AbstractAccumulator[T] extends Mapper[Any, Text, IntWritable, ObjectWritable] {
-    protected override def map(ignore: Any,
+    protected override def map(key: Any,
                                value: Text,
                                context: Mapper[Any, Text, IntWritable, ObjectWritable]#Context): Unit =
       Some(value.toString)
@@ -50,7 +50,7 @@ object Job1 extends ConfiguredTool("Job1") with App {
   }
 
   class Combiner extends Reducer[IntWritable, ObjectWritable, Text, ObjectWritable] {
-    override def reduce(key: IntWritable,
+    protected override def reduce(key: IntWritable,
                         values: lang.Iterable[ObjectWritable],
                         context: Reducer[IntWritable, ObjectWritable, Text, ObjectWritable]#Context): Unit =
       values.find(_.getDeclaredClass == classOf[QuestionData])
@@ -67,24 +67,25 @@ object Job1 extends ConfiguredTool("Job1") with App {
   }
 
   class Finisher extends Reducer[Text, ObjectWritable, Text, Text] {
-    override def reduce(key: Text,
-                        values: lang.Iterable[ObjectWritable],
-                        context: Reducer[Text, ObjectWritable, Text, Text]#Context): Unit =
+    protected override def reduce(
+                                   key: Text,
+                                   values: lang.Iterable[ObjectWritable],
+                                   context: Reducer[Text, ObjectWritable, Text, Text]#Context): Unit =
       context.write(key, new Text(values.toStream
-        .map(_.get.asInstanceOf[(String, Int)])
-        .groupByKey
-        .mapValues(_.sum)
-        .toStream
-        .sortBy(-_._2)
-        .map(_._1)
-        .take(5)
-        .mkString("[", ", ", "]")))
+      .map(_.get.asInstanceOf[(String, Int)])
+      .groupByKey
+      .mapValues(_.sum)
+      .toStream
+      .sortBy(-_._2)
+      .map(_._1)
+      .take(5)
+      .mkString("[", ", ", "]")))
   }
 
-  override protected def setupJob(job: Job, toolArgs: Array[String]): Unit = {
-    val questionsFile = new Path(toolArgs(0))
-    val questionTagsFile = new Path(toolArgs(1))
-    val resultPath = new Path(toolArgs(2))
+  override protected def setupJob(job: Job, jobArgs: Array[String]): Unit = {
+    val questionsFile = new Path(jobArgs(0))
+    val questionTagsFile = new Path(jobArgs(1))
+    val resultPath = new Path(jobArgs(2))
 
     val conf = job.getConfiguration
 

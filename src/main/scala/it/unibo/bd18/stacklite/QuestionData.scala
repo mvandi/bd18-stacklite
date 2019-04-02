@@ -7,21 +7,21 @@ import it.unibo.bd18.stacklite.QuestionData.df
 
 sealed trait QuestionData {
 
-  def id(): Int
+  def id: Int
 
-  def creationDate(): Date
+  def creationDate: Date
 
-  def closedDate(): Option[Date]
+  def closedDate: Option[Date]
 
-  def deletionDate(): Option[Date]
+  def deletionDate: Option[Date]
 
-  def score(): Int
+  def score: Int
 
-  def ownerUserId(): Option[Int]
+  def ownerUserId: Option[Int]
 
-  def answerCount(): Option[Int]
+  def answerCount: Option[Int]
 
-  def toCSVString(): String = s"$id,${df.format(creationDate)},${toString(closedDate)(df.format)},${toString(deletionDate)(df.format)},$score,${toString(ownerUserId)(_.toString)},${toString(answerCount)(_.toString)}"
+  def toCSVString: String = s"$id,${df.format(creationDate)},${toString(closedDate)(df.format)},${toString(deletionDate)(df.format)},$score,${toString(ownerUserId)(_.toString)},${toString(answerCount)(_.toString)}"
 
   private def toString[T](opt: Option[T])(f: T => String): String = opt.map(f).getOrElse("NA")
 
@@ -29,9 +29,7 @@ sealed trait QuestionData {
 
 object QuestionData {
 
-  def apply(row: Array[String]): QuestionData = create(row)
-
-  def create(row: Array[String]): QuestionData = QuestionDataImpl(
+  def apply(row: Array[String]): QuestionData = QuestionDataImpl(
     getId(row),
     getCreationDate(row),
     getClosedDate(row),
@@ -40,7 +38,7 @@ object QuestionData {
     getOwnerUserId(row),
     getAnswerCount(row))
 
-  private[stacklite] val df: DateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'")
+  private[stacklite] val df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'")
 
   private def getId(row: Array[String]): Int = row(0).toInt
 

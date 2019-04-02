@@ -2,19 +2,17 @@ package it.unibo.bd18.stacklite
 
 sealed trait QuestionTagData {
 
-  def id(): Int
+  def id: Int
 
-  def tag(): String
+  def tag: String
 
-  def toCSVString(): String = s"$id,$tag"
+  def toCSVString: String = s"$id,$tag"
 
 }
 
 object QuestionTagData {
 
-  def apply(row: Array[String]): QuestionTagData = create(row)
-
-  def create(row: Array[String]): QuestionTagData = QuestionTagDataImpl(
+  def apply(row: Array[String]): QuestionTagData = QuestionTagDataImpl(
     getId(row),
     getTag(row))
 

@@ -61,7 +61,6 @@ object Job1 extends ConfiguredTool("Job1") with App {
           values.toStream
             .filter(_.getDeclaredClass == classOf[QuestionTagData])
             .map(_.get.asInstanceOf[QuestionTagData].tag)
-            .toList
             .foreach(tag => context.write(newKey, new ObjectWritable((tag, score))))
         }
   }

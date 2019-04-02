@@ -20,16 +20,17 @@ import scala.collection.JavaConversions._
   */
 object Job1 extends ConfiguredTool("Job1") with App {
 
+  import it.unibo.bd18.util.implicits._
+
   protected abstract class AbstractAccumulator[T] extends Mapper[Any, Text, IntWritable, ObjectWritable] {
     protected override def map(ignore: Any,
                                value: Text,
-                               context: Mapper[Any, Text, IntWritable, ObjectWritable]#Context): Unit = {
-      val row = value.toString
-      if (!Utils.isHeader(row)) {
-        val t = converter(row.split("\\s*,\\s*"))
-        context.write(new IntWritable(keyExtractor(t)), new ObjectWritable(t))
-      }
-    }
+                               context: Mapper[Any, Text, IntWritable, ObjectWritable]#Context): Unit =
+      Some(value.toString)
+        .filterNot(Utils.isHeader)
+        .map(_.split("\\s*,\\s*"))
+        .map(converter)
+        .foreach(t => context.write(new IntWritable(keyExtractor(t)), new ObjectWritable(t)))
 
     protected def converter(row: Array[String]): T
 
@@ -49,52 +50,35 @@ object Job1 extends ConfiguredTool("Job1") with App {
   }
 
   class Combiner extends Reducer[IntWritable, ObjectWritable, Text, ObjectWritable] {
-    override def reduce(ignore: IntWritable,
+    override def reduce(key: IntWritable,
                         values: lang.Iterable[ObjectWritable],
-                        context: Reducer[IntWritable, ObjectWritable, Text, ObjectWritable]#Context): Unit = {
-      var question: QuestionData = null
-      val tags = new collection.mutable.ListBuffer[String]()
-
-      for (value <- values) {
-        val valueClass = value.getDeclaredClass
-        if (valueClass == classOf[QuestionData]) {
-          if (question != null)
-            throw new IllegalStateException(s"Multiple questions for key: $ignore")
-          question = value.asInstanceOf[QuestionData]
-        } else if (valueClass == classOf[QuestionTagData]) {
-          tags += value.get.asInstanceOf[QuestionTagData].tag
+                        context: Reducer[IntWritable, ObjectWritable, Text, ObjectWritable]#Context): Unit =
+      values.find(_.getDeclaredClass == classOf[QuestionData])
+        .map(_.get.asInstanceOf[QuestionData])
+        .fold(throw new IllegalStateException(s"question for key `${key.get}` is not defined")) { question =>
+          val newKey = new Text(YearMonthPair.format(question.creationDate))
+          val score = question.score
+          values.toStream
+            .filter(_.getDeclaredClass == classOf[QuestionTagData])
+            .map(_.get.asInstanceOf[QuestionTagData].tag)
+            .toList
+            .foreach(tag => context.write(newKey, new ObjectWritable((tag, score))))
         }
-      }
-
-      if (question != null && tags.nonEmpty) {
-        val key = new Text(YearMonthPair.format(question.creationDate))
-        val score = question.score
-        tags foreach (tag => context.write(key, new ObjectWritable((tag, score))))
-      }
-    }
   }
 
   class Finisher extends Reducer[Text, ObjectWritable, Text, Text] {
     override def reduce(key: Text,
                         values: lang.Iterable[ObjectWritable],
-                        context: Reducer[Text, ObjectWritable, Text, Text]#Context): Unit = {
-      val tags = new collection.mutable.HashMap[String, Integer]()
-      for (value <- values) {
-        val (tag, score) = value.get.asInstanceOf[(String, Integer)]
-        if (tags containsKey tag) {
-          tags(tag) = tags(tag) + score
-        } else {
-          tags(tag) = score
-        }
-      }
-
-      context.write(key, new Text(tags.toStream
+                        context: Reducer[Text, ObjectWritable, Text, Text]#Context): Unit =
+      context.write(key, new Text(values.toStream
+        .map(_.get.asInstanceOf[(String, Int)])
+        .groupByKey
+        .mapValues(_.sum)
+        .toStream
         .sortBy(-_._2)
         .map(_._1)
         .take(5)
-        .toList
         .mkString("[", ", ", "]")))
-    }
   }
 
   override protected def setupJob(job: Job, toolArgs: Array[String]): Unit = {

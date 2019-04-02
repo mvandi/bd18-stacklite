@@ -17,6 +17,5 @@ private[spark] trait StackliteApp extends SparkApp {
   private def createRDD[T: ClassTag](file: String)(f: Array[String] => T): RDD[T] = spark.readCSV(file)
     .map(_.toSeq.map(_.toString).toArray)
     .map(f)
-    .cache()
 
 }

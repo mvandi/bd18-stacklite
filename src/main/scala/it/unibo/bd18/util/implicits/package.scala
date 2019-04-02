@@ -18,7 +18,7 @@ package object implicits {
   }
 
   implicit class RichTraversableOnceWithNewPartitions[T: ClassTag](private val t: TraversableOnce[(T, TraversableOnce[String])]) {
-    def toRDD(implicit sc: SparkContext): RDD[T] = sc.makeRDD(t.toSeq.map(x => (x._1, x._2.toSeq)))
+    def toRDD(implicit sc: SparkContext): RDD[T] = sc.makeRDD(t.map(x => (x._1, x._2.toSeq)).toSeq)
   }
 
   implicit class RichKeyValueTraversable[K, V](private val t: Traversable[(K, V)]) {
@@ -31,6 +31,14 @@ package object implicits {
     def flatMapPair[U: ClassTag](f: (K, V) => TraversableOnce[U]): RDD[U] = rdd.flatMap(x => f(x._1, x._2))
 
     def mapPair[U: ClassTag](f: (K, V) => U): RDD[U] = rdd.map(x => f(x._1, x._2))
+  }
+
+  implicit class RichOptionRDD[T: ClassTag](private val rdd: RDD[Option[T]]) {
+    def flatten: RDD[T] = rdd.filter(_.isDefined).map(_.get)
+  }
+
+  implicit class RichTraversableOnceRDD[T: ClassTag](private val rdd: RDD[TraversableOnce[T]]) {
+    def flatten: RDD[T] = rdd.filter(_.nonEmpty).flatMap(identity)
   }
 
   implicit class RichSparkContext(private val sc: SparkContext) {
@@ -60,14 +68,6 @@ package object implicits {
 
   implicit class RichSQLContext(private val sqlContext: SQLContext) {
     def apply(sqlText: String): DataFrame = sqlContext.sql(sqlText)
-  }
-
-  implicit class RichOptionRDD[T: ClassTag](private val rdd: RDD[Option[T]]) {
-    def flatten: RDD[T] = rdd.filter(_.isDefined).map(_.get)
-  }
-
-  implicit class RichTraversableOnceRDD[T: ClassTag](private val rdd: RDD[TraversableOnce[T]]) {
-    def flatten: RDD[T] = rdd.filter(_.nonEmpty).flatMap(identity)
   }
 
   implicit def comparableToOrdered[A](c: Comparable[A]): Ordered[A] = new Ordered[A] {

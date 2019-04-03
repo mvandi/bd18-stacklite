@@ -23,7 +23,7 @@ object Job1 extends StackliteApp {
   val outputRDD = questionsRDD.keyBy(_.id)
     .partitionBy(new HashPartitioner(sc.coreCount))
     .join(questionTagsRDD.keyBy(_.id))
-    .mapPair((_, x) => (YearMonthPair(x._1.creationDate), (x._2.tag, x._1.score)))
+    .mapPair((_, x) => (YearMonthPair.format(x._1.creationDate), (x._2.tag, x._1.score)))
     .groupByKey
     .mapValues(_.groupByKey
       .mapValues(_.sum)
@@ -35,9 +35,7 @@ object Job1 extends StackliteApp {
     .mapPair((x, y) => s"$x -> $y")
     .cache()
 
-  println()
-  println(outputRDD.toDebugString)
-  println()
+  println(s"\n${outputRDD.toDebugString}\n")
 
   outputRDD.saveAsTextFile(args(2))
 

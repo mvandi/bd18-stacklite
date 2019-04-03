@@ -1,6 +1,6 @@
 package it.unibo.bd18.util
 
-import org.apache.hadoop.conf.{Configuration, Configured}
+import org.apache.hadoop.conf.Configured
 import org.apache.hadoop.mapreduce.Job
 import org.apache.hadoop.util.Tool
 

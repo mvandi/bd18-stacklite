@@ -1,6 +1,6 @@
 package it.unibo.bd18.stacklite
 
-import java.text.{DateFormat, SimpleDateFormat}
+import java.text.SimpleDateFormat
 import java.util.Date
 
 import it.unibo.bd18.stacklite.QuestionData.df
@@ -44,15 +44,15 @@ object QuestionData {
 
   private def getCreationDate(row: Array[String]): Date = df.parse(row(1))
 
-  private def getClosedDate(row: Array[String]): Option[Date] = getOption(row)(_(2))(_ != "NA").map(df.parse)
+  private def getClosedDate(row: Array[String]): Option[Date] = getOption(row)(_ (2))(_ != "NA").map(df.parse)
 
-  private def getDeletionDate(row: Array[String]): Option[Date] = getOption(row)(_(3))(_ != "NA").map(df.parse)
+  private def getDeletionDate(row: Array[String]): Option[Date] = getOption(row)(_ (3))(_ != "NA").map(df.parse)
 
   private def getScore(row: Array[String]): Int = row(4).toInt
 
-  private def getOwnerUserId(row: Array[String]): Option[Int] = getOption(row)(_(5))(_ != "NA").map(_.toInt)
+  private def getOwnerUserId(row: Array[String]): Option[Int] = getOption(row)(_ (5))(_ != "NA").map(_.toInt)
 
-  private def getAnswerCount(row: Array[String]): Option[Int] = getOption(row)(_(6))(_ != "NA").map(_.toInt)
+  private def getAnswerCount(row: Array[String]): Option[Int] = getOption(row)(_ (6))(_ != "NA").map(_.toInt)
 
   private def getOption[T](row: Array[String])(f: Array[String] => T)(g: T => Boolean): Option[T] = Some(row).map(f).filter(g)
 

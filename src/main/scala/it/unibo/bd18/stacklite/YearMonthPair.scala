@@ -16,7 +16,7 @@ object YearMonthPair {
 
   def apply(d: Date): YearMonthPair = {
     val (year, month) = tupled(d)
-    YearMonthPairImpl(year,  month)
+    YearMonthPairImpl(year, month)
   }
 
   def format(d: Date): String = {

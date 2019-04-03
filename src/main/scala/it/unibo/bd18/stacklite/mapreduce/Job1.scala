@@ -51,8 +51,8 @@ object Job1 extends ConfiguredTool("Job1") with App {
 
   class Combiner extends Reducer[IntWritable, ObjectWritable, Text, ObjectWritable] {
     protected override def reduce(key: IntWritable,
-                        values: lang.Iterable[ObjectWritable],
-                        context: Reducer[IntWritable, ObjectWritable, Text, ObjectWritable]#Context): Unit =
+                                  values: lang.Iterable[ObjectWritable],
+                                  context: Reducer[IntWritable, ObjectWritable, Text, ObjectWritable]#Context): Unit =
       values.find(_.getDeclaredClass == classOf[QuestionData])
         .map(_.get.asInstanceOf[QuestionData])
         .fold(throw new IllegalStateException(s"question for key `${key.get}` is not defined")) { question =>
@@ -66,19 +66,18 @@ object Job1 extends ConfiguredTool("Job1") with App {
   }
 
   class Finisher extends Reducer[Text, ObjectWritable, Text, Text] {
-    protected override def reduce(
-                                   key: Text,
-                                   values: lang.Iterable[ObjectWritable],
-                                   context: Reducer[Text, ObjectWritable, Text, Text]#Context): Unit =
+    protected override def reduce(key: Text,
+                                  values: lang.Iterable[ObjectWritable],
+                                  context: Reducer[Text, ObjectWritable, Text, Text]#Context): Unit =
       context.write(key, new Text(values.toStream
-      .map(_.get.asInstanceOf[(String, Int)])
-      .groupByKey
-      .mapValues(_.sum)
-      .toStream
-      .sortBy(-_._2)
-      .map(_._1)
-      .take(5)
-      .mkString("[", ", ", "]")))
+        .map(_.get.asInstanceOf[(String, Int)])
+        .groupByKey
+        .mapValues(_.sum)
+        .toStream
+        .sortBy(-_._2)
+        .map(_._1)
+        .take(5)
+        .mkString("[", ", ", "]")))
   }
 
   override protected def setupJob(job: Job, jobArgs: Array[String]): Unit = {
@@ -100,8 +99,8 @@ object Job1 extends ConfiguredTool("Job1") with App {
     job.setOutputKeyClass(classOf[Text])
     job.setOutputValueClass(classOf[Text])
 
-    MultipleInputs.addInputPath(job, questionsFile, classOf[FileInputFormat[Any, Text]], classOf[QuestionAccumulator])
-    MultipleInputs.addInputPath(job, questionTagsFile, classOf[FileInputFormat[Any, Text]], classOf[QuestionTagAccumulator])
+    MultipleInputs.addInputPath(job, questionsFile, classOf[FileInputFormat[_, Text]], classOf[QuestionAccumulator])
+    MultipleInputs.addInputPath(job, questionTagsFile, classOf[FileInputFormat[_, Text]], classOf[QuestionTagAccumulator])
     FileOutputFormat.setOutputPath(job, resultPath)
 
     job.setCombinerClass(classOf[Combiner])

@@ -69,20 +69,19 @@ object Job1 extends ConfiguredTool("Job1") with App {
     protected override def reduce(key: Text,
                                   values: lang.Iterable[ObjectWritable],
                                   context: Reducer[Text, ObjectWritable, Text, Text]#Context): Unit =
-      context.write(key, new Text(values.toStream
+      context.write(key, new Text(values
         .map(_.get.asInstanceOf[(String, Int)])
         .groupByKey
         .mapValues(_.sum)
         .toStream
         .sortBy(-_._2)
-        .map(_._1)
         .take(5)
         .mkString("[", ", ", "]")))
   }
 
   override protected def setupJob(job: Job, jobArgs: Array[String]): Unit = {
-    val questionsFile = new Path(jobArgs(0))
-    val questionTagsFile = new Path(jobArgs(1))
+    val questionsPath = new Path(jobArgs(0))
+    val questionTagsPath = new Path(jobArgs(1))
     val resultPath = new Path(jobArgs(2))
 
     val conf = job.getConfiguration
@@ -99,8 +98,8 @@ object Job1 extends ConfiguredTool("Job1") with App {
     job.setOutputKeyClass(classOf[Text])
     job.setOutputValueClass(classOf[Text])
 
-    MultipleInputs.addInputPath(job, questionsFile, classOf[FileInputFormat[_, Text]], classOf[QuestionAccumulator])
-    MultipleInputs.addInputPath(job, questionTagsFile, classOf[FileInputFormat[_, Text]], classOf[QuestionTagAccumulator])
+    MultipleInputs.addInputPath(job, questionsPath, classOf[FileInputFormat[_, Text]], classOf[QuestionAccumulator])
+    MultipleInputs.addInputPath(job, questionTagsPath, classOf[FileInputFormat[_, Text]], classOf[QuestionTagAccumulator])
     FileOutputFormat.setOutputPath(job, resultPath)
 
     job.setCombinerClass(classOf[Combiner])

@@ -52,8 +52,7 @@ package object implicits {
   }
 
   implicit class RichSparkSession(private val spark: SparkSession) {
-    def readCSV(path: String, header: Boolean = true): RDD[Row] = spark
-      .read
+    def readCSV(path: String, header: Boolean = true): RDD[Row] = spark.read
       .format("csv")
       .option("header", header.toString)
       .csv(path)

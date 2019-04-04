@@ -29,7 +29,6 @@ object Job1 extends StackliteApp {
       .mapValues(_.sum)
       .toStream
       .sortBy(-_._2)
-      .map(_._1)
       .take(5)
       .mkString("[", ", ", "]"))
     .mapPair((x, y) => s"$x -> $y")

@@ -14,7 +14,7 @@ private[spark] trait StackliteApp extends SparkApp {
 
   protected[this] lazy final val questionTagsRDD = createRDD(args(1))(QuestionTagData(_))
 
-  private def createRDD[T: ClassTag](file: String)(f: Array[String] => T): RDD[T] = spark.readCSV(file)
+  private def createRDD[T: ClassTag](path: String)(f: Array[String] => T): RDD[T] = spark.readCSV(path)
     .map(_.toSeq.map(_.toString).toArray)
     .map(f)
 

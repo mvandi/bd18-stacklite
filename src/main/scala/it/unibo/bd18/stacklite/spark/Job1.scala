@@ -1,6 +1,6 @@
 package it.unibo.bd18.stacklite.spark
 
-import it.unibo.bd18.stacklite.YearMonthPair
+import it.unibo.bd18.stacklite.Utils
 import org.apache.hadoop.fs.{FileSystem, Path}
 import org.apache.spark.{HashPartitioner, SparkConf}
 
@@ -21,10 +21,10 @@ object Job1 extends StackliteApp {
   }
 
   val outputRDD = questionsRDD.keyBy(_.id)
-    .partitionBy(new HashPartitioner(sc.coreCount))
     .join(questionTagsRDD.keyBy(_.id))
-    .mapPair((_, x) => (YearMonthPair.format(x._1.creationDate), (x._2.tag, x._1.score)))
+    .mapPair((_, x) => (Utils.format(x._1.creationDate), (x._2.tag, x._1.score)))
     .groupByKey
+    .partitionBy(new HashPartitioner(sc.coreCount))
     .mapValues(_.groupByKey
       .mapValues(_.sum)
       .toStream

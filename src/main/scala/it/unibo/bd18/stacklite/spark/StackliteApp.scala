@@ -10,9 +10,9 @@ private[spark] trait StackliteApp extends SparkApp {
 
   import it.unibo.bd18.util.implicits._
 
-  protected[this] lazy final val questionsRDD = createRDD(args(0))(QuestionData(_))
+  protected[this] lazy final val questionsRDD = createRDD(args(0))(QuestionData.create)
 
-  protected[this] lazy final val questionTagsRDD = createRDD(args(1))(QuestionTagData(_))
+  protected[this] lazy final val questionTagsRDD = createRDD(args(1))(QuestionTagData.create)
 
   private def createRDD[T: ClassTag](path: String)(f: Array[String] => T): RDD[T] = spark.readCSV(path)
     .map(_.toSeq.map(_.toString).toArray)

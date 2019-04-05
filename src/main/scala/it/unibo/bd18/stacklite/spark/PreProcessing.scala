@@ -1,12 +1,12 @@
 package it.unibo.bd18.stacklite.spark
 
-import it.unibo.bd18.stacklite.QuestionData
+import org.apache.hadoop.util.Shell
 import org.apache.spark.{HashPartitioner, SparkConf}
 
 object PreProcessing extends StackliteApp {
 
-  import QuestionData.df
   import implicits._
+  import it.unibo.bd18.stacklite.Utils.df
   import it.unibo.bd18.util.implicits._
 
   override protected[this] val conf: SparkConf = new SparkConf().setAppName("PreProcessing")

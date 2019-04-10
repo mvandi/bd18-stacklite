@@ -1,4 +1,4 @@
-package it.unibo.bd18.stacklite.mapreduce;
+package it.unibo.bd18.util;
 
 import it.unibo.bd18.util.Pair;
 import it.unibo.bd18.util.WritableWrapper;

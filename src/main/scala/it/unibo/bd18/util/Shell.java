@@ -14,7 +14,7 @@ import java.util.regex.Pattern;
 
 public final class Shell {
 
-    private static final Runtime RUNTIME = Runtime.getRuntime();
+    private static final Runtime INSTANCE = Runtime.getRuntime();
 
     public static Environment environment() {
         return new Environment();
@@ -23,7 +23,10 @@ public final class Shell {
     public static final class Environment {
         private final Map<String, String> variables = new LinkedHashMap<>();
 
-        private Environment set(String name, boolean value) {
+        private Environment() {
+        }
+
+        public Environment set(String name, boolean value) {
             return set(name, value ? "1" : "0");
         }
 
@@ -63,15 +66,16 @@ public final class Shell {
 
         public String[] build() {
             if (variables.isEmpty()) return null;
-            final String[] result = new String[variables.size()];
-            {
-                int i = 0;
-                for (Entry<String, String> e : variables.entrySet()) {
-                    result[i] = e.getKey() + "=" + e.getValue();
-                    i++;
-                }
-            }
+            final String[] result = toArray();
             variables.clear();
+            return result;
+        }
+
+        private String[] toArray() {
+            final String[] result = new String[variables.size()];
+            int i = 0;
+            for (Entry<String, String> e : variables.entrySet())
+                result[i++] = e.getKey() + "=" + quote(e.getValue());
             return result;
         }
     }
@@ -93,8 +97,15 @@ public final class Shell {
     }
 
     public static List<String> exec(String command, Environment env, File dir) {
+        final String resolvedCommand = resolveEnvironmentVariables(command);
+        return exec0(isWindows() ? "cmd.exe /c " + resolvedCommand : "sh -c " + resolvedCommand,
+                env == null ? null : env.build(),
+                dir);
+    }
+
+    private static List<String> exec0(String command, String[] envp, File dir) {
         try {
-            final Process p = RUNTIME.exec(command, env == null ? null : env.build(), dir);
+            final Process p = INSTANCE.exec(command, envp, dir);
             try (final BufferedReader in = new BufferedReader(new InputStreamReader(p.getInputStream()))) {
                 final List<String> lines = new ArrayList<>();
                 String line;
@@ -106,6 +117,40 @@ public final class Shell {
         } catch (final IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private static String resolveEnvironmentVariables(String command) {
+        final Pattern variablePattern = Pattern.compile(isWindows()
+                ? "%(\\w+?)%"
+                : "[$](\\{(\\w+?)\\}|\\w+?)");
+
+        final Matcher m = variablePattern.matcher(command);
+
+        final StringBuilder sb = new StringBuilder(command.length());
+        int lastMatchEnd = 0;
+        while (m.find()) {
+            sb.append(command, lastMatchEnd, m.start());
+            final String variable = m.group(1).replaceAll("(\\W)+", "");
+            final String value = System.getenv(variable);
+            if (value == null)
+                sb.append(command.substring(m.start(), m.end()));
+            else
+                sb.append(quote(value));
+            lastMatchEnd = m.end();
+        }
+        sb.append(command.substring(lastMatchEnd));
+
+        return sb.toString();
+    }
+
+    private static String quote(String s) {
+        return s.contains(" ")
+                ? "\"" + s + "\""
+                : s;
+    }
+
+    private static boolean isWindows() {
+        return System.getProperty("os.name").toLowerCase().contains("win");
     }
 
     private Shell() {

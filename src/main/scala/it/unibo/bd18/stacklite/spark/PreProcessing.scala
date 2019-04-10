@@ -1,6 +1,5 @@
 package it.unibo.bd18.stacklite.spark
 
-import org.apache.hadoop.util.Shell
 import org.apache.spark.{HashPartitioner, SparkConf}
 
 object PreProcessing extends StackliteApp {

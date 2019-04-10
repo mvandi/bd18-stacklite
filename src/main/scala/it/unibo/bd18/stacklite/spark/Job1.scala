@@ -6,7 +6,7 @@ import org.apache.spark.{HashPartitioner, SparkConf}
 
 /**
   * Determine the five tags that received the highest sum of scores for each
-  * year-month pair (tags are sorted in descending order).
+  * year-month pair (tags sorted in descending order).
   */
 object Job1 extends StackliteApp {
 
@@ -32,7 +32,6 @@ object Job1 extends StackliteApp {
       .take(5)
       .mkString("[", ", ", "]"))
     .mapPair((x, y) => s"$x -> $y")
-    .cache()
 
   println(s"\n${outputRDD.toDebugString}\n")
 

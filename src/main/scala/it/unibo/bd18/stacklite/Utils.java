@@ -23,8 +23,16 @@ public final class Utils {
         return false;
     }
 
-    public static boolean isInstanceOf(Class cls1, Class<?> cls2) {
-        return cls1 != null && cls2 != null && cls2.isAssignableFrom(cls1);
+    public static boolean isInstanceOf(Object source, Class<?> target) {
+        return source != null && target != null && isInstanceOf0(source.getClass(), target);
+    }
+
+    public static boolean isInstanceOf(Class<?> source, Class<?> target) {
+        return source != null && target != null && isInstanceOf0(source, target);
+    }
+
+    private static boolean isInstanceOf0(Class<?> source, Class<?> target) {
+        return target.isAssignableFrom(source);
     }
 
     public static <K, V extends Comparable<? super V>> List<Pair<K, V>> sortedByValues(final Map<K, V> m) {
@@ -73,10 +81,6 @@ public final class Utils {
 
     public static String toString(Date d) {
         return d == null ? "NA" : df.format(d);
-    }
-
-    public static String toString(int i) {
-        return Integer.toString(i);
     }
 
     public static String toString(Integer i) {

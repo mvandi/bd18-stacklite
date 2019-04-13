@@ -3,6 +3,7 @@ package it.unibo.bd18.stacklite.mapreduce;
 import it.unibo.bd18.stacklite.QuestionData;
 import it.unibo.bd18.stacklite.QuestionTagData;
 import it.unibo.bd18.stacklite.Utils;
+import it.unibo.bd18.util.JobRunner;
 import it.unibo.bd18.util.Pair;
 import it.unibo.bd18.util.PairWritable;
 import org.apache.hadoop.conf.Configuration;
@@ -16,14 +17,15 @@ import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.hadoop.mapreduce.lib.input.KeyValueTextInputFormat;
 import org.apache.hadoop.mapreduce.lib.input.MultipleInputs;
 import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
-import org.apache.hadoop.mapreduce.lib.jobcontrol.ControlledJob;
-import org.apache.hadoop.mapreduce.lib.jobcontrol.JobControl;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 
 import java.io.IOException;
+import java.text.ParseException;
 import java.util.*;
+
+import static it.unibo.bd18.stacklite.Utils.df;
 
 /**
  * Determine the five tags that received the highest sum of scores for each
@@ -39,14 +41,20 @@ public final class Job1 extends Configured implements Tool {
         protected final void map(LongWritable keyIn, Text valueIn, Context context) throws IOException, InterruptedException {
             final String row = valueIn.toString();
             if (!row.isEmpty() && !Utils.isHeader(row)) {
-                final T t = mapper(row.split("\\s*,\\s*"));
-                keyOut.set(classifier(t));
-                valueOut.set(mapper(t));
-                context.write(keyOut, valueOut);
+                final T t = mapper(row);
+                if (filter(t)) {
+                    keyOut.set(classifier(t));
+                    valueOut.set(mapper(t));
+                    context.write(keyOut, valueOut);
+                }
             }
         }
 
-        protected abstract T mapper(String[] row);
+        protected abstract T mapper(String row);
+
+        protected boolean filter(T t) {
+            return true;
+        }
 
         protected abstract Writable mapper(T t);
 
@@ -54,9 +62,26 @@ public final class Job1 extends Configured implements Tool {
     }
 
     public static final class QuestionMapper extends AbstractRowMapper<QuestionData> {
+        private static final Date startDate;
+        private static final Date endDate;
+
+        static {
+            try {
+                startDate = df.parse("2012-01-01T00:00:00Z");
+                endDate = df.parse("2012-12-31T23:59:59Z");
+            } catch (ParseException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
         @Override
-        protected QuestionData mapper(String[] row) {
+        protected QuestionData mapper(String row) {
             return QuestionData.create(row);
+        }
+
+        @Override
+        protected boolean filter(QuestionData questionData) {
+            return Utils.between(questionData.creationDate(), startDate, endDate);
         }
 
         @Override
@@ -72,7 +97,7 @@ public final class Job1 extends Configured implements Tool {
 
     public static final class QuestionTagMapper extends AbstractRowMapper<QuestionTagData> {
         @Override
-        protected QuestionTagData mapper(String[] row) {
+        protected QuestionTagData mapper(String row) {
             return QuestionTagData.create(row);
         }
 
@@ -156,7 +181,7 @@ public final class Job1 extends Configured implements Tool {
         }
     }
 
-    private ControlledJob createJob1(Configuration conf, Path questionsPath, Path questionTagsPath, Path outputPath) throws IOException {
+    private Job createJob1(Configuration conf, Path questionsPath, Path questionTagsPath, Path outputPath) throws IOException {
         final Job job = Job.getInstance(conf);
 
         job.setJarByClass(getClass());
@@ -173,12 +198,10 @@ public final class Job1 extends Configured implements Tool {
         job.setCombinerClass(Combiner.class);
         job.setReducerClass(Combiner.class);
 
-        final ControlledJob controlledJob = new ControlledJob(conf);
-        controlledJob.setJob(job);
-        return controlledJob;
+        return job;
     }
 
-    private ControlledJob createJob2(Configuration conf, Path inputPath, Path outputPath) throws IOException {
+    private Job createJob2(Configuration conf, Path inputPath, Path outputPath) throws IOException {
         final Job job = Job.getInstance(conf);
 
         job.setJarByClass(getClass());
@@ -195,9 +218,7 @@ public final class Job1 extends Configured implements Tool {
         job.setCombinerClass(Finisher.class);
         job.setReducerClass(Finisher.class);
 
-        final ControlledJob controlledJob = new ControlledJob(conf);
-        controlledJob.setJob(job);
-        return controlledJob;
+        return job;
     }
 
     @Override
@@ -209,24 +230,19 @@ public final class Job1 extends Configured implements Tool {
 
         final Configuration conf = getConf();
 
-        final FileSystem fs = FileSystem.get(conf);
-        if (fs.exists(resultPath)) {
-            fs.delete(resultPath, true);
+        try (final FileSystem fs = FileSystem.get(conf)) {
+            if (fs.exists(resultPath)) {
+                fs.delete(resultPath, true);
+            }
+
+            final Job job1 = createJob1(conf, questionsPath, questionTagsPath, tempPath);
+            final Job job2 = createJob2(conf, tempPath, resultPath);
+            final boolean succeeded = JobRunner.runAll(true, job1, job2);
+
+            fs.delete(tempPath, true);
+
+            return succeeded ? 0 : 1;
         }
-
-        final ControlledJob job1 = createJob1(conf, questionsPath, questionTagsPath, tempPath);
-        final ControlledJob job2 = createJob2(conf, tempPath, resultPath);
-        job2.addDependingJob(job1);
-
-        final JobControl ctrl = new JobControl("Job1");
-        ctrl.addJob(job1);
-        ctrl.addJob(job2);
-
-        ctrl.run();
-
-        fs.delete(tempPath, true);
-
-        return ctrl.getFailedJobList().isEmpty() ? 0 : 1;
     }
 
     public static void main(String... args) throws Exception {

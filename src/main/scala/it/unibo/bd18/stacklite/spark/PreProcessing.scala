@@ -1,5 +1,7 @@
 package it.unibo.bd18.stacklite.spark
 
+import java.util.Date
+
 import org.apache.spark.{HashPartitioner, SparkConf}
 
 object PreProcessing extends StackliteApp {
@@ -13,14 +15,18 @@ object PreProcessing extends StackliteApp {
   val questionsDestPath = args(2)
   val questionTagsDestPath = args(3)
 
-  val startDate = df.parse("2012-01-01T00:00:00Z")
-  val endDate = df.parse("2016-12-31T23:59:59Z")
+  deleteIfExists(questionsDestPath)
+  deleteIfExists(questionTagsDestPath)
+
+  def startDate: Date = df.parse("2012-01-01T00:00:00Z")
+
+  def endDate: Date = df.parse("2016-12-31T23:59:59Z")
 
   val (questions, questionTags) = questionsRDD
     .filter(_.creationDate.between(startDate, endDate))
     .keyBy(_.id)
-    .partitionBy(new HashPartitioner(sc.coreCount))
     .join(questionTagsRDD.keyBy(_.id))
+    .partitionBy(new HashPartitioner(sc.coreCount))
     .map(_._2)
     .collect
     .unzip

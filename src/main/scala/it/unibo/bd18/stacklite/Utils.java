@@ -57,6 +57,11 @@ public final class Utils {
         return result;
     }
 
+    public static boolean between(Date d, Date startDate, Date endDate) {
+        assert startDate.compareTo(endDate) <= 0;
+        return d.compareTo(startDate) >= 0 && d.compareTo(endDate) <= 0;
+    }
+
     public static String format(Date d) {
         final Calendar c = Calendar.getInstance();
         c.setTime(d);

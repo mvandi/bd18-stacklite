@@ -28,10 +28,6 @@ public final class QuestionData implements Serializable {
                 Utils.readIntBoxed(row[6]));
     }
 
-    public static int readId(String s) {
-        return Integer.parseInt(s);
-    }
-
     public QuestionData(int id, Date creationDate, Date closedDate, Date deletionDate, int score, Integer ownerUserId, Integer answerCount) {
         this.id = id;
         this.creationDate = creationDate;

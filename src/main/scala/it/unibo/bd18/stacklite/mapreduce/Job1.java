@@ -3,7 +3,7 @@ package it.unibo.bd18.stacklite.mapreduce;
 import it.unibo.bd18.stacklite.QuestionData;
 import it.unibo.bd18.stacklite.QuestionTagData;
 import it.unibo.bd18.stacklite.Utils;
-import it.unibo.bd18.util.JobRunner;
+import it.unibo.bd18.util.CompositeJob;
 import it.unibo.bd18.util.Pair;
 import it.unibo.bd18.util.PairWritable;
 import org.apache.hadoop.conf.Configuration;
@@ -215,7 +215,6 @@ public final class Job1 extends Configured implements Tool {
         FileOutputFormat.setOutputPath(job, outputPath);
 
         job.setMapperClass(InputMapper.class);
-        job.setCombinerClass(Finisher.class);
         job.setReducerClass(Finisher.class);
 
         return job;
@@ -225,7 +224,7 @@ public final class Job1 extends Configured implements Tool {
     public int run(String... args) throws Exception {
         final Path questionsPath = new Path(args[0]);
         final Path questionTagsPath = new Path(args[1]);
-        final Path tempPath = new Path(args[2] + "/temp");
+        final Path tempPath = new Path(args[2] + "-temp");
         final Path resultPath = new Path(args[2]);
 
         final Configuration conf = getConf();
@@ -235,9 +234,10 @@ public final class Job1 extends Configured implements Tool {
                 fs.delete(resultPath, true);
             }
 
-            final Job job1 = createJob1(conf, questionsPath, questionTagsPath, tempPath);
-            final Job job2 = createJob2(conf, tempPath, resultPath);
-            final boolean succeeded = JobRunner.runAll(true, job1, job2);
+            final boolean succeeded = CompositeJob
+                    .add(createJob1(conf, questionsPath, questionTagsPath, tempPath))
+                    .add(createJob2(conf, tempPath, resultPath))
+                    .waitForCompletion(true);
 
             fs.delete(tempPath, true);
 

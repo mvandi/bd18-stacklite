@@ -24,8 +24,8 @@ public final class QuestionData implements Serializable {
                 Utils.readDate(row[2]),
                 Utils.readDate(row[3]),
                 Utils.readInt(row[4]),
-                Utils.readIntBoxed(row[5]),
-                Utils.readIntBoxed(row[6]));
+                Utils.readInt(row[5], true),
+                Utils.readInt(row[6], true));
     }
 
     public QuestionData(int id, Date creationDate, Date closedDate, Date deletionDate, int score, Integer ownerUserId, Integer answerCount) {

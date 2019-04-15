@@ -45,8 +45,8 @@ public final class Utils {
             private final int asc = ascending ? 1 : -1;
 
             @Override
-            public int compare(Entry<K, V> o1, Entry<K, V> o2) {
-                return asc * o1.getValue().compareTo(o2.getValue());
+            public int compare(Entry<K, V> a, Entry<K, V> b) {
+                return asc * a.getValue().compareTo(b.getValue());
             }
         });
 
@@ -62,13 +62,13 @@ public final class Utils {
         return d.compareTo(startDate) >= 0 && d.compareTo(endDate) <= 0;
     }
 
-    public static String format(Date d) {
+    public static synchronized String format(Date d) {
         final Calendar c = Calendar.getInstance();
         c.setTime(d);
         return String.format("(%d,%d)", c.get(Calendar.YEAR), c.get(Calendar.MONTH) + 1);
     }
 
-    public static Date readDate(String s) {
+    public static synchronized Date readDate(String s) {
         try {
             return s.equals("NA") ? null : df.parse(s);
         } catch (ParseException e) {
@@ -77,14 +77,14 @@ public final class Utils {
     }
 
     public static int readInt(String s) {
-        return Integer.parseInt(s);
+        return readInt(s, false);
     }
 
-    public static Integer readIntBoxed(String s) {
-        return s.equals("NA") ? null : Integer.parseInt(s);
+    public static Integer readInt(String s, boolean boxed) {
+        return boxed && s.equals("NA") ? null : Integer.parseInt(s);
     }
 
-    public static String toString(Date d) {
+    public static synchronized String toString(Date d) {
         return d == null ? "NA" : df.format(d);
     }
 

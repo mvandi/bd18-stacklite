@@ -13,9 +13,8 @@ public final class QuestionTagData implements Serializable {
 
     public static QuestionTagData create(String[] row) {
         return new QuestionTagData(
-                Integer.parseInt(row[0]),
-                row[1]
-        );
+                Utils.readInt(row[0]),
+                row[1]);
     }
 
     public QuestionTagData(int id, String tag) {

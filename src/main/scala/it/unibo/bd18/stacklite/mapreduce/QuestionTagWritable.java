@@ -7,7 +7,7 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
-public class QuestionTagWritable extends WritableWrapper<QuestionTagData> {
+public final class QuestionTagWritable extends WritableWrapper<QuestionTagData> {
 
     public static QuestionTagWritable create(QuestionTagData tag) {
         return new QuestionTagWritable(tag);
@@ -23,15 +23,12 @@ public class QuestionTagWritable extends WritableWrapper<QuestionTagData> {
 
     @Override
     public void write(DataOutput out) throws IOException {
-        out.write(obj.id());
-        out.writeUTF(obj.tag());
+        out.writeBytes(obj.toCSVString());
     }
 
     @Override
     public void readFields(DataInput in) throws IOException {
-        obj = new QuestionTagData(
-                in.readInt(),
-                in.readUTF());
+        obj = QuestionTagData.create(in.readLine());
     }
 
 }

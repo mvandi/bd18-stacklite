@@ -2,6 +2,7 @@ package it.unibo.bd18.util
 
 import java.util.Date
 
+import it.unibo.bd18.stacklite.Utils.df
 import org.apache.spark.SparkContext
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.{DataFrame, Row, SQLContext, SparkSession}

@@ -14,12 +14,13 @@ fi
 
 QUESTIONS_PATH=$2
 QUESTIONTAGS_PATH=$3
-RESULT_PATH=$4
 
 if [ "$1" == "--mapreduce" ]; then
     MAPREDUCE=1
+    RESULT_PATH=$4/mapreduce
 elif [ "$1" == "--spark" ]; then
     SPARK=1
+    RESULT_PATH=$4/spark
 else
     usage
 fi
@@ -31,3 +32,5 @@ elif [ ! -z ${SPARK+x} ]; then
     echo "Running Apache Spark job..."
     spark2-submit --class it.unibo.bd18.stacklite.spark.Job1 bd18-stacklite.jar $QUESTIONS_PATH $QUESTIONTAGS_PATH $RESULT_PATH
 fi
+
+echo "Output written to $RESULT_PATH"

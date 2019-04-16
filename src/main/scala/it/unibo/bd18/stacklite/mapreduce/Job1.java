@@ -234,7 +234,7 @@ public final class Job1 extends Configured implements Tool {
                 fs.delete(resultPath, true);
             }
 
-            final boolean succeeded = CompositeJob
+            final boolean succeeded = new CompositeJob()
                     .add(createJob1(conf, questionsPath, questionTagsPath, tempPath))
                     .add(createJob2(conf, tempPath, resultPath))
                     .waitForCompletion(true);

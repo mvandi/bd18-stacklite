@@ -12,67 +12,68 @@ import static java.util.Objects.requireNonNull;
 
 public class CompositeJob {
 
-    public static Builder add(Iterable<? extends Job> jobs) {
-        return new Builder().add(jobs);
+    private volatile boolean running = false;
+    private final List<Job> jobs;
+
+    public CompositeJob() {
+        jobs = new LinkedList<>();
     }
 
-    public static Builder add(Job first, Job... more) {
-        return new Builder().add(first, more);
+    public CompositeJob add(Job first, Job... more) {
+        checkNotRunning();
+        addInternal(first);
+        return addInternal(more);
     }
 
-    public static class Builder {
+    public CompositeJob add(Iterable<? extends Job> jobs) {
+        checkNotRunning();
+        requireNonNull(jobs, "jobs are null");
+        return addInternal(jobs);
+    }
 
-        private boolean running = false;
+    public CompositeJob add(Job[] jobs) {
+        checkNotRunning();
+        requireNonNull(jobs, "jobs are null");
+        return addInternal(jobs);
+    }
 
-        private final List<Job> jobs;
+    public boolean waitForCompletion(boolean verbose) throws InterruptedException, IOException, ClassNotFoundException {
+        checkNotRunning();
 
-        private Builder() {
-            jobs = new LinkedList<>();
-        }
-
-        public Builder add(Iterable<? extends Job> jobs) {
-            checkNotRunning();
-            if (jobs != null) {
-                for (final Job job : jobs) {
-                    addInternal(job);
-                }
+        running = true;
+        final Iterator<Job> it = jobs.iterator();
+        while (it.hasNext()) {
+            if (!it.next().waitForCompletion(verbose)) {
+                jobs.clear();
+                return false;
             }
-            return this;
+            it.remove();
         }
+        running = false;
 
-        public Builder add(Job first, Job... more) {
-            checkNotRunning();
-            addInternal(first);
-            return add(Arrays.asList(more));
+        return true;
+    }
+
+    private void addInternal(Job job) {
+        requireNonNull(job, "job is null");
+        jobs.add(job);
+    }
+
+    private CompositeJob addInternal(Iterable<? extends Job> jobs) {
+        for (final Job job : jobs) {
+            addInternal(job);
         }
+        return this;
+    }
 
-        public boolean waitForCompletion(boolean verbose) throws InterruptedException, IOException, ClassNotFoundException {
-            checkNotRunning();
-            running = true;
-            final Iterator<Job> it = jobs.iterator();
-            while (it.hasNext()) {
-                if (!it.next().waitForCompletion(verbose)) {
-                    while (it.hasNext())
-                        it.remove();
-                    return false;
-                }
-                it.remove();
-            }
-            running = false;
-            return true;
+    private CompositeJob addInternal(Job[] jobs) {
+        return addInternal(Arrays.asList(jobs));
+    }
+
+    private void checkNotRunning() {
+        if (running) {
+            throw new IllegalStateException("jobs are already running");
         }
-
-        private void addInternal(Job job) {
-            requireNonNull(job, "job is null");
-            jobs.add(job);
-        }
-
-        private void checkNotRunning() {
-            if (running) {
-                throw new IllegalStateException("adder is running");
-            }
-        }
-
     }
 
 }

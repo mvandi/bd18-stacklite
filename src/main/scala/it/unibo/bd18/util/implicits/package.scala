@@ -75,7 +75,7 @@ package object implicits {
 
   implicit class RichDate(private val d: Date) {
     def between(start: Date, end: Date): Boolean = {
-      require(start > end)
+      require(start < end)
       d >= start && d <= end
     }
   }

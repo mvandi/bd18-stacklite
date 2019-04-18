@@ -1,6 +1,8 @@
 package it.unibo.bd18.stacklite;
 
 import it.unibo.bd18.util.Pair;
+import org.apache.commons.collections.ComparatorUtils;
+import org.apache.commons.collections.comparators.ReverseComparator;
 
 import java.text.DateFormat;
 import java.text.ParseException;
@@ -42,11 +44,21 @@ public final class Utils {
     public static <K, V extends Comparable<? super V>> List<Pair<K, V>> sortedByValues(final Map<K, V> m, final boolean ascending) {
         final List<Entry<K, V>> entries = new ArrayList<>(m.entrySet());
         Collections.sort(entries, new Comparator<Entry<K, V>>() {
-            private final int asc = ascending ? 1 : -1;
+            private final Comparator<Entry<K, V>> comparator = getComparator();
+
+            private Comparator<Entry<K, V>> getComparator() {
+                final Comparator<Entry<K, V>> valueComparator = new Comparator<Entry<K, V>>() {
+                    @Override
+                    public int compare(Entry<K, V> a, Entry<K, V> b) {
+                        return a.getValue().compareTo(b.getValue());
+                    }
+                };
+                return ascending ? valueComparator : ComparatorUtils.reversedComparator(valueComparator);
+            }
 
             @Override
             public int compare(Entry<K, V> a, Entry<K, V> b) {
-                return asc * a.getValue().compareTo(b.getValue());
+                return comparator.compare(a, b);
             }
         });
 
@@ -58,7 +70,7 @@ public final class Utils {
     }
 
     public static boolean between(Date d, Date startDate, Date endDate) {
-        assert startDate.compareTo(endDate) <= 0;
+        assert startDate.compareTo(endDate) < 0;
         return d.compareTo(startDate) >= 0 && d.compareTo(endDate) <= 0;
     }
 

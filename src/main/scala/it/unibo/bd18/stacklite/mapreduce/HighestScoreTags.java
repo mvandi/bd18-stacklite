@@ -1,7 +1,7 @@
 package it.unibo.bd18.stacklite.mapreduce;
 
 import it.unibo.bd18.stacklite.Utils;
-import it.unibo.bd18.util.JobFactory;
+import it.unibo.bd18.util.JobProvider;
 import it.unibo.bd18.util.Pair;
 import it.unibo.bd18.util.PairWritable;
 import org.apache.hadoop.conf.Configuration;
@@ -12,6 +12,7 @@ import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.hadoop.mapreduce.lib.input.KeyValueTextInputFormat;
+import org.apache.hadoop.mapreduce.lib.input.MultipleInputs;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 
 import java.io.IOException;
@@ -21,10 +22,10 @@ import java.util.Map;
 
 public final class HighestScoreTags {
 
-    public static JobFactory create(final Class<?> mainClass, final Configuration conf, final Path inputPath, final Path outputPath) {
-        return new JobFactory() {
+    public static JobProvider create(final Class<?> mainClass, final Configuration conf, final Path inputPath, final Path outputPath) {
+        return new JobProvider() {
             @Override
-            public Job create() throws IOException {
+            public Job get() throws IOException {
                 final Job job = Job.getInstance(conf);
 
                 job.setJarByClass(mainClass);
@@ -34,10 +35,10 @@ public final class HighestScoreTags {
                 job.setOutputKeyClass(Text.class);
                 job.setOutputValueClass(Text.class);
 
-                KeyValueTextInputFormat.addInputPath(job, inputPath);
+                MultipleInputs.addInputPath(job, inputPath, KeyValueTextInputFormat.class, InputMapper.class);
                 FileOutputFormat.setOutputPath(job, outputPath);
 
-                job.setMapperClass(InputMapper.class);
+                //job.setCombinerClass(Finisher.class);
                 job.setReducerClass(Finisher.class);
 
                 return job;

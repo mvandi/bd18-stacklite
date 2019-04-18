@@ -1,7 +1,5 @@
 package it.unibo.bd18.util;
 
-import it.unibo.bd18.util.Pair;
-import it.unibo.bd18.util.WritableWrapper;
 import org.apache.hadoop.io.Writable;
 
 import java.io.DataInput;

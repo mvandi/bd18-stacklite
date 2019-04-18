@@ -3,7 +3,7 @@ package it.unibo.bd18.stacklite.mapreduce;
 import it.unibo.bd18.stacklite.QuestionData;
 import it.unibo.bd18.stacklite.QuestionTagData;
 import it.unibo.bd18.stacklite.Utils;
-import it.unibo.bd18.util.JobFactory;
+import it.unibo.bd18.util.JobProvider;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.*;
@@ -15,20 +15,19 @@ import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 
 import java.io.IOException;
-import java.text.ParseException;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 
-import static it.unibo.bd18.stacklite.Utils.df;
+import static it.unibo.bd18.stacklite.C.dates.endDate;
+import static it.unibo.bd18.stacklite.C.dates.startDate;
 
 public final class Join {
 
-    public static JobFactory create(final Class<?> mainClass, final Configuration conf, final Path questionsPath, final Path questionTagsPath, final Path outputPath) throws IOException {
-        return new JobFactory() {
+    public static JobProvider create(final Class<?> mainClass, final Configuration conf, final Path questionsPath, final Path questionTagsPath, final Path outputPath) {
+        return new JobProvider() {
             @Override
-            public Job create() throws IOException {
+            public Job get() throws IOException {
                 final Job job = Job.getInstance(conf);
 
                 job.setJarByClass(mainClass);
@@ -42,7 +41,6 @@ public final class Join {
                 MultipleInputs.addInputPath(job, questionTagsPath, TextInputFormat.class, QuestionTagMapper.class);
                 FileOutputFormat.setOutputPath(job, outputPath);
 
-                job.setCombinerClass(Combiner.class);
                 job.setReducerClass(Combiner.class);
 
                 return job;
@@ -50,19 +48,35 @@ public final class Join {
         };
     }
 
-    public static final class QuestionMapper extends AbstractRowMapper<QuestionData> {
-        private static final Date startDate;
-        private static final Date endDate;
+    private static abstract class AbstractRowMapper<T> extends Mapper<LongWritable, Text, IntWritable, ObjectWritable> {
+        private final IntWritable keyOut = new IntWritable();
+        private final ObjectWritable valueOut = new ObjectWritable();
 
-        static {
-            try {
-                startDate = df.parse("2012-01-01T00:00:00Z");
-                endDate = df.parse("2012-12-31T23:59:59Z");
-            } catch (ParseException e) {
-                throw new RuntimeException(e);
+        @Override
+        protected final void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
+            final String row = value.toString();
+            if (!row.isEmpty() && !Utils.isHeader(row)) {
+                final T t = mapper(row);
+                if (filter(t)) {
+                    keyOut.set(classifier(t));
+                    valueOut.set(mapper(t));
+                    context.write(keyOut, valueOut);
+                }
             }
         }
 
+        protected abstract T mapper(String row);
+
+        protected boolean filter(T t) {
+            return true;
+        }
+
+        protected abstract Writable mapper(T t);
+
+        protected abstract int classifier(T t);
+    }
+
+    public static final class QuestionMapper extends AbstractRowMapper<QuestionData> {
         @Override
         protected QuestionData mapper(String row) {
             return QuestionData.create(row);
@@ -101,55 +115,28 @@ public final class Join {
         }
     }
 
-    private static abstract class AbstractRowMapper<T> extends Mapper<LongWritable, Text, IntWritable, ObjectWritable> {
-        private final IntWritable keyOut = new IntWritable();
-        private final ObjectWritable valueOut = new ObjectWritable();
-
-        @Override
-        protected final void map(LongWritable keyIn, Text valueIn, Context context) throws IOException, InterruptedException {
-            final String row = valueIn.toString();
-            if (!row.isEmpty() && !Utils.isHeader(row)) {
-                final T t = mapper(row);
-                if (filter(t)) {
-                    keyOut.set(classifier(t));
-                    valueOut.set(mapper(t));
-                    context.write(keyOut, valueOut);
-                }
-            }
-        }
-
-        protected abstract T mapper(String row);
-
-        protected boolean filter(T t) {
-            return true;
-        }
-
-        protected abstract Writable mapper(T t);
-
-        protected abstract int classifier(T t);
-    }
-
     public static class Combiner extends Reducer<IntWritable, ObjectWritable, Text, Text> {
         private final Text keyOut = new Text();
-        private final Text valueOut = new Text();
 
         @Override
-        protected void reduce(IntWritable keyIn, Iterable<ObjectWritable> valuesIn, Context context) throws IOException, InterruptedException {
-            QuestionData question = null;
+        protected void reduce(IntWritable key, Iterable<ObjectWritable> values, Context context) throws IOException, InterruptedException {
+            int score = 0;
+            boolean scoreAssigned = false;
             final List<String> pendingTags = new ArrayList<>();
 
-            for (final ObjectWritable value : valuesIn) {
+            for (final ObjectWritable value : values) {
                 if (Utils.isInstanceOf(value.getDeclaredClass(), QuestionWritable.class)) {
-                    if (question != null)
-                        throw new IllegalStateException("Multiple questions for key " + keyIn);
-                    question = ((QuestionWritable) value.get()).get();
+                    if (scoreAssigned)
+                        throw new IllegalStateException("Multiple questions for key " + key);
+                    final QuestionData question = ((QuestionWritable) value.get()).get();
                     keyOut.set(Utils.format(question.creationDate()));
+                    score = question.score();
+                    scoreAssigned = true;
                 } else if (Utils.isInstanceOf(value.getDeclaredClass(), QuestionTagWritable.class)) {
                     final String tag = ((QuestionTagWritable) value.get()).get().tag();
-                    if (question == null) {
+                    if (!scoreAssigned) {
                         pendingTags.add(tag);
                     } else {
-                        final int score = question.score();
                         if (!pendingTags.isEmpty()) {
                             final Iterator<String> it = pendingTags.iterator();
                             while (it.hasNext()) {
@@ -164,7 +151,7 @@ public final class Join {
         }
 
         private void write(Context context, String tag, int score) throws IOException, InterruptedException {
-            valueOut.set(TextIntPairWritable.format(tag, score));
+            final Text valueOut = new Text(TextIntPairWritable.format(tag, score));
             context.write(keyOut, valueOut);
         }
     }

@@ -33,4 +33,6 @@ elif [ ! -z ${SPARK+x} ]; then
     spark2-submit --class it.unibo.bd18.stacklite.spark.Job1 bd18-stacklite.jar $QUESTIONS_PATH $QUESTIONTAGS_PATH $RESULT_PATH
 fi
 
-echo "Output written to $RESULT_PATH"
+if [ "$?" == "0" ]; then
+    echo "Output written to $RESULT_PATH"
+fi

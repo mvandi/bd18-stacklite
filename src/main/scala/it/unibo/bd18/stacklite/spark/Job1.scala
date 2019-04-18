@@ -1,7 +1,5 @@
 package it.unibo.bd18.stacklite.spark
 
-import java.util.Date
-
 import it.unibo.bd18.stacklite.Utils
 import org.apache.spark.{HashPartitioner, SparkConf}
 
@@ -11,16 +9,13 @@ import org.apache.spark.{HashPartitioner, SparkConf}
   */
 object Job1 extends StackliteApp {
 
-  import it.unibo.bd18.stacklite.Utils.df
+  import it.unibo.bd18.stacklite.C.dates._
   import it.unibo.bd18.util.implicits._
 
   override protected[this] val conf: SparkConf = new SparkConf().setAppName("Job1")
 
   val resultPath = args(2)
   deleteIfExists(resultPath)
-
-  def startDate: Date = df.parse("2012-01-01T00:00:00Z")
-  def endDate: Date = df.parse("2014-12-31T23:59:59Z")
 
   val qRDD = questionsRDD
     .filter(_.creationDate.between(startDate, endDate))

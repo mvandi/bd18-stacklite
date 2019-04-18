@@ -4,8 +4,8 @@ import org.apache.hadoop.mapreduce.Job;
 
 import java.io.IOException;
 
-public interface JobFactory {
+public interface JobProvider {
 
-    Job create() throws IOException;
+    Job get() throws IOException;
 
 }

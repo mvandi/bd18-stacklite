@@ -2,7 +2,7 @@ package it.unibo.bd18.util
 
 import java.util.Date
 
-import it.unibo.bd18.stacklite.Utils.df
+import it.unibo.bd18.stacklite.Utils
 import org.apache.spark.SparkContext
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.{DataFrame, Row, SQLContext, SparkSession}
@@ -75,10 +75,7 @@ package object implicits {
   }
 
   implicit class RichDate(private val d: Date) {
-    def between(start: Date, end: Date): Boolean = {
-      require(start < end)
-      d >= start && d <= end
-    }
+    def between(start: Date, end: Date): Boolean = Utils.between(d, start, end)
   }
 
 }

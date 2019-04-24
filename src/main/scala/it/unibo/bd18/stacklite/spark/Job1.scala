@@ -1,7 +1,6 @@
 package it.unibo.bd18.stacklite.spark
 
-import it.unibo.bd18.stacklite.Utils
-import org.apache.spark.{HashPartitioner, SparkConf}
+import org.apache.spark.SparkConf
 
 /**
   * Determine the five tags that received the highest sum of scores for each
@@ -10,7 +9,9 @@ import org.apache.spark.{HashPartitioner, SparkConf}
 object Job1 extends StackliteApp {
 
   import it.unibo.bd18.stacklite.C.dates._
+  import it.unibo.bd18.stacklite.Utils
   import it.unibo.bd18.util.implicits._
+  import org.apache.spark.HashPartitioner
 
   override protected[this] val conf: SparkConf = new SparkConf().setAppName("Job1")
 

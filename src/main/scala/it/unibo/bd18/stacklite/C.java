@@ -19,7 +19,6 @@ public final class C {
                 throw new RuntimeException(e);
             }
         }
-
     }
 
     private C() {

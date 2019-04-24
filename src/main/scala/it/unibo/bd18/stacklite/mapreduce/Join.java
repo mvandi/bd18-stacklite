@@ -131,21 +131,20 @@ public final class Join {
                     final QuestionData question = ((QuestionWritable) value.get()).get();
                     keyOut.set(Utils.format(question.creationDate()));
                     score = question.score();
+                    if (!pendingTags.isEmpty()) {
+                        final Iterator<String> it = pendingTags.iterator();
+                        while (it.hasNext()) {
+                            write(context, it.next(), score);
+                            it.remove();
+                        }
+                    }
                     scoreAssigned = true;
                 } else if (Utils.isInstanceOf(value.getDeclaredClass(), QuestionTagWritable.class)) {
                     final String tag = ((QuestionTagWritable) value.get()).get().tag();
-                    if (!scoreAssigned) {
-                        pendingTags.add(tag);
-                    } else {
-                        if (!pendingTags.isEmpty()) {
-                            final Iterator<String> it = pendingTags.iterator();
-                            while (it.hasNext()) {
-                                write(context, it.next(), score);
-                                it.remove();
-                            }
-                        }
+                    if (scoreAssigned)
                         write(context, tag, score);
-                    }
+                    else
+                        pendingTags.add(tag);
                 }
             }
         }

@@ -1,14 +1,13 @@
 package it.unibo.bd18.stacklite.spark
 
-import java.util.Date
-
-import org.apache.spark.{HashPartitioner, SparkConf}
+import org.apache.spark.SparkConf
 
 object PreProcessing extends StackliteApp {
 
   import implicits._
-  import it.unibo.bd18.stacklite.Utils.df
+  import it.unibo.bd18.stacklite.C.dates._
   import it.unibo.bd18.util.implicits._
+  import org.apache.spark.HashPartitioner
 
   override protected[this] val conf: SparkConf = new SparkConf().setAppName("PreProcessing")
 
@@ -17,10 +16,6 @@ object PreProcessing extends StackliteApp {
 
   deleteIfExists(questionsDestPath)
   deleteIfExists(questionTagsDestPath)
-
-  def startDate: Date = df.parse("2012-01-01T00:00:00Z")
-
-  def endDate: Date = df.parse("2016-12-31T23:59:59Z")
 
   val (questions, questionTags) = questionsRDD
     .filter(_.creationDate.between(startDate, endDate))

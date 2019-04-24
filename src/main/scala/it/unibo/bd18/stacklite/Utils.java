@@ -2,7 +2,6 @@ package it.unibo.bd18.stacklite;
 
 import it.unibo.bd18.util.Pair;
 import org.apache.commons.collections.ComparatorUtils;
-import org.apache.commons.collections.comparators.ReverseComparator;
 
 import java.text.DateFormat;
 import java.text.ParseException;

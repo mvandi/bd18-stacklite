@@ -15,15 +15,18 @@ fi
 QUESTIONS_PATH=$2
 QUESTIONTAGS_PATH=$3
 
+
 if [ "$1" == "--mapreduce" ]; then
     MAPREDUCE=1
-    RESULT_PATH=$4/mapreduce
+    JOBTYPE=mapreduce
 elif [ "$1" == "--spark" ]; then
     SPARK=1
-    RESULT_PATH=$4/spark
+    JOBTYPE=spark
 else
     usage
 fi
+
+RESULT_PATH=$4/$JOBTYPE
 
 if [ ! -z ${MAPREDUCE+x} ]; then
     echo "Running Apache Hadoop MapReduce job..."
@@ -34,5 +37,8 @@ elif [ ! -z ${SPARK+x} ]; then
 fi
 
 if [ "$?" == "0" ]; then
-    echo "Output written to $RESULT_PATH"
+    RESULT_FILE=results-${JOBTYPE}.txt
+    hdfs dfs -cat $RESULT_PATH/* > $RESULT_FILE
+    hdfs dfs -rm -r -skipTrash $RESULT_PATH
+    echo "Output written to `pwd`/$RESULT_FILE"
 fi

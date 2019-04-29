@@ -36,30 +36,13 @@ public final class Utils {
         return target.isAssignableFrom(source);
     }
 
-    public static <K, V extends Comparable<? super V>> List<Pair<K, V>> sortedByValues(final Map<K, V> m) {
-        return sortedByValues(m, true);
+    public static <K, V extends Comparable<? super V>> List<Pair<K, V>> sortedByValue(final Map<K, V> m) {
+        return sortedByValue(m, true);
     }
 
-    public static <K, V extends Comparable<? super V>> List<Pair<K, V>> sortedByValues(final Map<K, V> m, final boolean ascending) {
+    public static <K, V extends Comparable<? super V>> List<Pair<K, V>> sortedByValue(final Map<K, V> m, final boolean ascending) {
         final List<Entry<K, V>> entries = new ArrayList<>(m.entrySet());
-        Collections.sort(entries, new Comparator<Entry<K, V>>() {
-            private final Comparator<Entry<K, V>> comparator = getComparator();
-
-            private Comparator<Entry<K, V>> getComparator() {
-                final Comparator<Entry<K, V>> valueComparator = new Comparator<Entry<K, V>>() {
-                    @Override
-                    public int compare(Entry<K, V> a, Entry<K, V> b) {
-                        return a.getValue().compareTo(b.getValue());
-                    }
-                };
-                return ascending ? valueComparator : ComparatorUtils.reversedComparator(valueComparator);
-            }
-
-            @Override
-            public int compare(Entry<K, V> a, Entry<K, V> b) {
-                return comparator.compare(a, b);
-            }
-        });
+        Collections.sort(entries, Utils.<K, V>getComparator(ascending));
 
         final List<Pair<K, V>> result = new ArrayList<>();
         for (final Entry<K, V> entry : entries)
@@ -104,6 +87,28 @@ public final class Utils {
     }
 
     private Utils() {
+    }
+
+    private static <K, V extends Comparable<? super V>> Comparator<Entry<K, V>> getComparator(final boolean ascending) {
+        return new Comparator<Entry<K, V>>() {
+            private final Comparator<Entry<K, V>> comparator = getComparator();
+
+            private Comparator<Entry<K, V>> getComparator() {
+                final Comparator<Entry<K, V>> valueComparator = new Comparator<Entry<K, V>>() {
+                    @Override
+                    public int compare(Entry<K, V> a, Entry<K, V> b) {
+                        return a.getValue().compareTo(b.getValue());
+                    }
+                };
+                return ascending ? valueComparator : ComparatorUtils.reversedComparator(valueComparator);
+            }
+
+            @Override
+            public int compare(Entry<K, V> a, Entry<K, V> b) {
+                return comparator.compare(a, b);
+            }
+        };
+
     }
 
 }

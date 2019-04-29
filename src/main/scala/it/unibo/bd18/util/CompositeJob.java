@@ -19,6 +19,7 @@ public class CompositeJob {
         SUCCEEDED,
         FAILED
     }
+
     private State state;
 
     public CompositeJob() {

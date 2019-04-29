@@ -8,8 +8,10 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 
+import java.io.IOException;
+
 /**
- * Determine the five tags that received the highest sum of scores for each
+ * Find the first five tags that received the highest sum of scores for each
  * year-month pair (tags sorted in descending order).
  */
 public final class Job1 extends Configured implements Tool {
@@ -25,23 +27,38 @@ public final class Job1 extends Configured implements Tool {
         final Class<?> mainClass = getClass();
 
         try (final FileSystem fs = FileSystem.get(conf)) {
-            if (fs.exists(resultPath)) {
-                fs.delete(resultPath, true);
-            }
+            deleteIfExists(fs, true, tempPath, resultPath);
 
-            final boolean succeeded = new CompositeJob()
+            final CompositeJob job = new CompositeJob()
                     .add(Join.create(mainClass, conf, questionsPath, questionTagsPath, tempPath))
-                    .add(HighestScoreTags.create(mainClass, conf, tempPath, resultPath))
-                    .waitForCompletion(true);
-
-            fs.delete(tempPath, true);
-
-            return succeeded ? 0 : 1;
+                    .add(HighestScoreTags.create(mainClass, conf, tempPath, resultPath));
+            try {
+                return job.waitForCompletion(true) ? 0 : 1;
+            } finally {
+                deleteIfExists(fs, true, tempPath);
+            }
         }
     }
 
     public static void main(String... args) throws Exception {
         System.exit(ToolRunner.run(new Configuration(), new Job1(), args));
+    }
+
+    private static void deleteIfExists(FileSystem fs, Path first, Path... more) throws IOException {
+        deleteIfExists(fs, false, first, more);
+    }
+
+    private static void deleteIfExists(FileSystem fs, boolean recursive, Path first, Path... more) throws IOException {
+        deleteIfExists0(fs, recursive, first);
+        for (Path path : more) {
+            deleteIfExists0(fs, recursive, path);
+        }
+    }
+
+    private static void deleteIfExists0(FileSystem fs, boolean recursive, Path path) throws IOException {
+        if (fs.exists(path)) {
+            fs.delete(path, recursive);
+        }
     }
 
 }

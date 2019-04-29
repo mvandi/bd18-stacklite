@@ -38,7 +38,6 @@ public final class HighestScoreTags {
                 MultipleInputs.addInputPath(job, inputPath, KeyValueTextInputFormat.class, InputMapper.class);
                 FileOutputFormat.setOutputPath(job, outputPath);
 
-                //job.setCombinerClass(Finisher.class);
                 job.setReducerClass(Finisher.class);
 
                 return job;
@@ -69,7 +68,7 @@ public final class HighestScoreTags {
                     tags.put(tag, score);
                 }
             }
-            final List<Pair<String, Integer>> result = Utils.sortedByValues(tags, false).subList(0, 5);
+            final List<Pair<String, Integer>> result = Utils.sortedByValue(tags, false).subList(0, 5);
             valueOut.set(result.toString());
             context.write(key, valueOut);
         }

@@ -24,18 +24,6 @@ public final class Utils {
         return false;
     }
 
-    public static boolean isInstanceOf(Object source, Class<?> target) {
-        return source != null && target != null && isInstanceOf0(source.getClass(), target);
-    }
-
-    public static boolean isInstanceOf(Class<?> source, Class<?> target) {
-        return source != null && target != null && isInstanceOf0(source, target);
-    }
-
-    private static boolean isInstanceOf0(Class<?> source, Class<?> target) {
-        return target.isAssignableFrom(source);
-    }
-
     public static <K, V extends Comparable<? super V>> List<Pair<K, V>> sortedByValue(final Map<K, V> m) {
         return sortedByValue(m, true);
     }

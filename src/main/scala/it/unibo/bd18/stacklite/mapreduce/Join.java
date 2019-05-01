@@ -4,6 +4,7 @@ import it.unibo.bd18.stacklite.QuestionData;
 import it.unibo.bd18.stacklite.QuestionTagData;
 import it.unibo.bd18.stacklite.Utils;
 import it.unibo.bd18.util.JobProvider;
+import org.apache.commons.lang.ClassUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.*;
@@ -125,7 +126,8 @@ public final class Join {
             final List<String> pendingTags = new ArrayList<>();
 
             for (final ObjectWritable value : values) {
-                if (Utils.isInstanceOf(value.getDeclaredClass(), QuestionWritable.class)) {
+                Class valueClass = value.getDeclaredClass();
+                if (ClassUtils.isAssignable(valueClass, QuestionWritable.class)) {
                     if (scoreAssigned)
                         throw new IllegalStateException("Multiple questions for key " + key);
                     final QuestionData question = ((QuestionWritable) value.get()).get();
@@ -137,7 +139,7 @@ public final class Join {
                         it.remove();
                     }
                     scoreAssigned = true;
-                } else if (Utils.isInstanceOf(value.getDeclaredClass(), QuestionTagWritable.class)) {
+                } else if (ClassUtils.isAssignable(valueClass, QuestionTagWritable.class)) {
                     final String tag = ((QuestionTagWritable) value.get()).get().tag();
                     if (scoreAssigned)
                         write(context, tag, score);

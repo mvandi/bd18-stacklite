@@ -24,7 +24,7 @@ public final class Job1 extends Configured implements Tool {
         final Path resultPath = new Path(args[2]);
 
         final Configuration conf = getConf();
-        final Class<?> mainClass = getClass();
+        final Class mainClass = getClass();
 
         try (final FileSystem fs = FileSystem.get(conf)) {
             deleteIfExists(fs, true, tempPath, resultPath);

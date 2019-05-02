@@ -32,16 +32,16 @@ public final class CompositeJob {
         return addInternal(more);
     }
 
-    public CompositeJob add(Iterable<? extends JobProvider> providers) {
+    public CompositeJob add(List<? extends JobProvider> jobs) {
         checkDefine();
-        Validate.notNull(providers, "providers are null");
-        return addInternal(providers);
+        Validate.notNull(jobs, "jobs are null");
+        return addInternal(jobs);
     }
 
-    public CompositeJob add(JobProvider[] providers) {
+    public CompositeJob add(JobProvider[] jobs) {
         checkDefine();
-        Validate.notNull(providers, "providers are null");
-        return addInternal(providers);
+        Validate.notNull(jobs, "jobs are null");
+        return addInternal(jobs);
     }
 
     public boolean isCompleted() {
@@ -64,15 +64,13 @@ public final class CompositeJob {
                 final Job job = it.next().get();
                 Validate.notNull(job, "provided job is null");
                 if (!job.waitForCompletion(verbose)) {
-                    jobs.clear();
-                    state = State.FAILED;
+                    cleanUpFailure();
                     return false;
                 }
                 it.remove();
             }
         } catch (final Exception e) {
-            jobs.clear();
-            state = State.FAILED;
+            cleanUpFailure();
             throw e;
         }
         state = State.SUCCEEDED;
@@ -80,20 +78,25 @@ public final class CompositeJob {
         return true;
     }
 
-    private void addInternal(JobProvider provider) {
-        Validate.notNull(provider, "provider is null");
-        jobs.add(provider);
+    private void cleanUpFailure() {
+        jobs.clear();
+        state = State.FAILED;
     }
 
-    private CompositeJob addInternal(Iterable<? extends JobProvider> providers) {
-        for (final JobProvider provider : providers) {
+    private void addInternal(JobProvider job) {
+        Validate.notNull(job, "job is null");
+        this.jobs.add(job);
+    }
+
+    private CompositeJob addInternal(List<? extends JobProvider> jobs) {
+        for (final JobProvider provider : jobs) {
             addInternal(provider);
         }
         return this;
     }
 
-    private CompositeJob addInternal(JobProvider[] providers) {
-        return addInternal(Arrays.asList(providers));
+    private CompositeJob addInternal(JobProvider[] jobs) {
+        return addInternal(Arrays.asList(jobs));
     }
 
     private void checkDefine() {

@@ -1,6 +1,9 @@
 package it.unibo.bd18.stacklite.spark
 
-import org.apache.spark.SparkConf
+import it.unibo.bd18.stacklite.C.dates._
+import it.unibo.bd18.stacklite.Utils
+import it.unibo.bd18.util.implicits._
+import org.apache.spark.{HashPartitioner, SparkConf}
 
 /**
   * Find the first five tags that received the highest sum of scores for each
@@ -9,11 +12,6 @@ import org.apache.spark.SparkConf
 object Job1 extends StackliteApp {
 
   override protected[this] val conf: SparkConf = new SparkConf().setAppName("Job1")
-
-  import it.unibo.bd18.stacklite.C.dates._
-  import it.unibo.bd18.stacklite.Utils
-  import it.unibo.bd18.util.implicits._
-  import org.apache.spark.HashPartitioner
 
   val resultPath = args(2)
   deleteIfExists(resultPath)
@@ -35,7 +33,7 @@ object Job1 extends StackliteApp {
       .sortBy(-_._2)
       .take(5)
       .mkString("[", ", ", "]"))
-    .mapPair((x, y) => s"$x -> $y")
+    .mapPair((x, y) => s"$x\t$y")
 
   println(s"\n${outputRDD.toDebugString}\n")
 

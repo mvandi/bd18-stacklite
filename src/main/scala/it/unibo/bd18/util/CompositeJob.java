@@ -9,7 +9,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
-public class CompositeJob {
+public final class CompositeJob {
 
     private final List<JobProvider> jobs;
 
@@ -19,7 +19,6 @@ public class CompositeJob {
         SUCCEEDED,
         FAILED
     }
-
     private State state;
 
     public CompositeJob() {

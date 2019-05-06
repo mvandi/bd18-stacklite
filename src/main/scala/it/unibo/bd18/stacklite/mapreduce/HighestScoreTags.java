@@ -3,7 +3,6 @@ package it.unibo.bd18.stacklite.mapreduce;
 import it.unibo.bd18.stacklite.Utils;
 import it.unibo.bd18.util.JobProvider;
 import it.unibo.bd18.util.Pair;
-import it.unibo.bd18.util.PairWritable;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
@@ -19,6 +18,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 public final class HighestScoreTags {
 
@@ -38,6 +38,7 @@ public final class HighestScoreTags {
                 MultipleInputs.addInputPath(job, inputPath, KeyValueTextInputFormat.class, InputMapper.class);
                 FileOutputFormat.setOutputPath(job, outputPath);
 
+                job.setCombinerClass(Combiner.class);
                 job.setReducerClass(Finisher.class);
 
                 return job;
@@ -52,26 +53,43 @@ public final class HighestScoreTags {
         }
     }
 
+    public static final class Combiner extends Reducer<Text, TextIntPairWritable, Text, TextIntPairWritable> {
+        @Override
+        protected void reduce(Text key, Iterable<TextIntPairWritable> values, Context context) throws IOException, InterruptedException {
+            final Map<String, Integer> tags = sumScoresByTag(values);
+            for (final Entry<String, Integer> e : tags.entrySet()) {
+                final TextIntPairWritable valueOut = TextIntPairWritable.create(e.getKey(), e.getValue());
+                context.write(key, valueOut);
+            }
+        }
+    }
+
     public static final class Finisher extends Reducer<Text, TextIntPairWritable, Text, Text> {
         private final Text valueOut = new Text();
 
         @Override
         protected void reduce(Text key, Iterable<TextIntPairWritable> values, Context context) throws IOException, InterruptedException {
-            final Map<String, Integer> tags = new HashMap<>();
-            for (final PairWritable<Text, IntWritable> value : values) {
-                final Pair<Text, IntWritable> t = value.get();
-                final String tag = t.left().toString();
-                final int score = t.right().get();
-                if (tags.containsKey(tag)) {
-                    tags.put(tag, tags.get(tag) + score);
-                } else {
-                    tags.put(tag, score);
-                }
-            }
+            final Map<String, Integer> tags = sumScoresByTag(values);
             final List<Pair<String, Integer>> result = Utils.sortedByValue(tags, false).subList(0, 5);
             valueOut.set(result.toString());
             context.write(key, valueOut);
         }
+    }
+
+    private static Map<String, Integer> sumScoresByTag(Iterable<TextIntPairWritable> values) {
+        final Map<String, Integer> tags = new HashMap<>();
+        for (final TextIntPairWritable value : values) {
+            final Pair<Text, IntWritable> t = value.get();
+            final String tag = t.left().toString();
+            final int score = t.right().get();
+            final Integer oldScore = tags.get(tag);
+            if (oldScore != null) {
+                tags.put(tag, oldScore + score);
+            } else {
+                tags.put(tag, score);
+            }
+        }
+        return tags;
     }
 
     private HighestScoreTags() {

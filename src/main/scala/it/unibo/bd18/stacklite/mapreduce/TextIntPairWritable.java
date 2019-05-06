@@ -10,6 +10,10 @@ public class TextIntPairWritable extends PairWritable<Text, IntWritable> {
         return new TextIntPairWritable(left, right);
     }
 
+    public static TextIntPairWritable create(String left, int right) {
+        return create(new Text(left), new IntWritable(right));
+    }
+
     public static String format(String left, int right) {
         return String.format("(%s,%d)", left, right);
     }

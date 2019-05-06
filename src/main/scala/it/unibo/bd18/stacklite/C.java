@@ -7,7 +7,7 @@ import static it.unibo.bd18.stacklite.Utils.df;
 
 public final class C {
 
-    public static class dates {
+    public static final class dates {
         public static final Date startDate;
         public static final Date endDate;
 
@@ -18,6 +18,37 @@ public final class C {
             } catch (final ParseException e) {
                 throw new RuntimeException(e);
             }
+        }
+    }
+
+    public static final class tuning {
+        public static final class cpu {
+            public static final int nodeCount = 10;
+
+            public static final int availableCores = 4;
+
+            public static final int executorCores = 3;
+
+            public static final int executorsPerNode = (availableCores - 1) / executorCores;
+
+            public static final int executorCount = nodeCount * executorsPerNode - 1;
+
+            private cpu() {
+            }
+        }
+
+        public static final class memory {
+            public static final float offHeapSize = 0.1f;
+
+            public static final int availableMemory = 16;
+
+            public static final int executorMemory = Math.round((availableMemory * 0.75f) * ((1 - offHeapSize) / cpu.executorsPerNode));
+
+            private memory() {
+            }
+        }
+
+        private tuning() {
         }
     }
 

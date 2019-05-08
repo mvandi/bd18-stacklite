@@ -9,8 +9,6 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 
-import java.io.IOException;
-
 /**
  * Find the first five tags that received the highest sum of scores for each
  * year-month pair (tags sorted in descending order).

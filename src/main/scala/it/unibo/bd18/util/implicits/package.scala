@@ -5,7 +5,7 @@ import java.util.Date
 import it.unibo.bd18.stacklite.Utils
 import org.apache.spark.SparkContext
 import org.apache.spark.rdd.RDD
-import org.apache.spark.sql.{DataFrame, Row, SQLContext, SparkSession}
+import org.apache.spark.sql.{Row, SparkSession}
 
 import scala.language.implicitConversions
 import scala.reflect.ClassTag
@@ -64,14 +64,6 @@ package object implicits {
       .map(_.mkString(","))
       .toSeq
       .toRDD(spark.sparkContext)
-  }
-
-  implicit class RichSQLContext(private val sqlContext: SQLContext) {
-    def apply(sqlText: String): DataFrame = sqlContext.sql(sqlText)
-  }
-
-  implicit def comparableToOrdered[A](c: Comparable[A]): Ordered[A] = new Ordered[A] {
-    override def compare(that: A): Int = c.compareTo(that)
   }
 
   implicit class RichDate(private val d: Date) {

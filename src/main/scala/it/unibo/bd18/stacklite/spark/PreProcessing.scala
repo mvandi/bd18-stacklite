@@ -1,5 +1,7 @@
 package it.unibo.bd18.stacklite.spark
 
+import it.unibo.bd18.stacklite.Utils
+import org.apache.hadoop.fs.Path
 import org.apache.spark.SparkConf
 
 object PreProcessing extends StackliteApp {
@@ -14,8 +16,8 @@ object PreProcessing extends StackliteApp {
   val questionsDestPath = args(2)
   val questionTagsDestPath = args(3)
 
-  deleteIfExists(questionsDestPath)
-  deleteIfExists(questionTagsDestPath)
+  Utils.deleteIfExists(fs, true, new Path(questionsDestPath))
+  Utils.deleteIfExists(fs, true, new Path(questionTagsDestPath))
 
   val (questions, questionTags) = questionsRDD
     .filter(_.creationDate.between(startDate, endDate))

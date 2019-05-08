@@ -1,5 +1,6 @@
 package it.unibo.bd18.stacklite.mapreduce;
 
+import it.unibo.bd18.stacklite.Utils;
 import it.unibo.bd18.util.CompositeJob;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
@@ -27,7 +28,7 @@ public final class Job1 extends Configured implements Tool {
         final Class mainClass = getClass();
 
         try (final FileSystem fs = FileSystem.get(conf)) {
-            deleteIfExists(fs, true, tempPath, resultPath);
+            Utils.deleteIfExists(fs, true, tempPath, resultPath);
 
             final CompositeJob job = new CompositeJob()
                     .add(Join.create(mainClass, conf, questionsPath, questionTagsPath, tempPath))
@@ -35,30 +36,13 @@ public final class Job1 extends Configured implements Tool {
             try {
                 return job.waitForCompletion(true) ? 0 : 1;
             } finally {
-                deleteIfExists(fs, true, tempPath);
+                Utils.deleteIfExists(fs, true, tempPath);
             }
         }
     }
 
     public static void main(String... args) throws Exception {
         System.exit(ToolRunner.run(new Configuration(), new Job1(), args));
-    }
-
-    private static void deleteIfExists(FileSystem fs, Path first, Path... more) throws IOException {
-        deleteIfExists(fs, false, first, more);
-    }
-
-    private static void deleteIfExists(FileSystem fs, boolean recursive, Path first, Path... more) throws IOException {
-        deleteIfExists0(fs, recursive, first);
-        for (Path path : more) {
-            deleteIfExists0(fs, recursive, path);
-        }
-    }
-
-    private static void deleteIfExists0(FileSystem fs, boolean recursive, Path path) throws IOException {
-        if (fs.exists(path)) {
-            fs.delete(path, recursive);
-        }
     }
 
 }

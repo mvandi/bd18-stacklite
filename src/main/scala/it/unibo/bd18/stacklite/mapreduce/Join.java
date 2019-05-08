@@ -16,8 +16,8 @@ import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 
 import static it.unibo.bd18.stacklite.C.dates.endDate;
@@ -123,7 +123,7 @@ public final class Join {
         protected void reduce(IntWritable key, Iterable<ObjectWritable> values, Context context) throws IOException, InterruptedException {
             int score = 0;
             boolean scoreAssigned = false;
-            final List<String> pendingTags = new ArrayList<>();
+            final List<String> pendingTags = new LinkedList<>();
 
             for (final ObjectWritable value : values) {
                 Class valueClass = value.getDeclaredClass();

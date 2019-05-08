@@ -4,6 +4,7 @@ import it.unibo.bd18.stacklite.C.dates._
 import it.unibo.bd18.stacklite.C.tuning
 import it.unibo.bd18.stacklite.Utils
 import it.unibo.bd18.util.implicits._
+import org.apache.hadoop.fs.Path
 
 /**
   * Find the first five tags that received the highest sum of scores for each
@@ -16,26 +17,27 @@ object Job1 extends StackliteApp {
   override protected[this] val conf: SparkConf = new SparkConf().setAppName("Job1")
 
   val resultPath = args(2)
-  deleteIfExists(resultPath)
+  Utils.deleteIfExists(fs, true, new Path(resultPath))
 
-  val qRDD = questionsRDD
-    .filter(_.creationDate.between(startDate, endDate))
-    .keyBy(_.id)
+  val outputRDD = {
+    val qRDD = questionsRDD
+      .filter(_.creationDate.between(startDate, endDate))
+      .keyBy(_.id)
 
-  val qtRDD = questionTagsRDD.keyBy(_.id)
+    val qtRDD = questionTagsRDD.keyBy(_.id)
 
-  val outputRDD = qRDD
-    .join(qtRDD)
-    .mapPair((_, x) => (Utils.format(x._1.creationDate), (x._2.tag, x._1.score)))
-    .groupByKey
-    .partitionBy(new HashPartitioner(tuning.cpu.executorCores * 4))
-    .mapValues(_.groupByKey
-      .mapValues(_.sum)
-      .toSeq
-      .sortBy(-_._2)
-      .take(5)
-      .mkString("[", ", ", "]"))
-    .mapPair((x, y) => s"$x\t$y")
+    qRDD.join(qtRDD)
+      .mapPair((_, x) => (Utils.format(x._1.creationDate), (x._2.tag, x._1.score)))
+      .groupByKey
+      .partitionBy(new HashPartitioner(tuning.cpu.executorCores * 4))
+      .mapValues(_.groupByKey
+        .mapValues(_.sum)
+        .toSeq
+        .sortBy(-_._2)
+        .take(5)
+        .mkString("[", ", ", "]"))
+      .mapPair((x, y) => s"$x\t$y")
+  }
 
   println(s"\n${outputRDD.toDebugString}\n")
 

@@ -76,7 +76,7 @@ public final class HighestScoreTags {
         }
     }
 
-    private static Map<String, Integer> sumScoresByTag(Iterable<TextIntPairWritable> values) {
+    private static Map<String, Integer> sumScoresByTag(Iterable<? extends TextIntPairWritable> values) {
         final Map<String, Integer> tags = new HashMap<>();
         for (final TextIntPairWritable value : values) {
             final Pair<Text, IntWritable> t = value.get();

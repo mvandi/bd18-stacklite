@@ -1,7 +1,7 @@
 package it.unibo.bd18.stacklite.spark
 
 import it.unibo.bd18.app.SparkApp
-import it.unibo.bd18.stacklite.{QuestionData, QuestionTagData}
+import it.unibo.bd18.stacklite.{QuestionData, QuestionTagData, Utils}
 import org.apache.hadoop.fs.{FileSystem, Path}
 import org.apache.spark.rdd.RDD
 
@@ -19,11 +19,6 @@ private[spark] trait StackliteApp extends SparkApp {
     .map(_.toSeq.map(_.toString).toArray)
     .map(f)
 
-  protected[this] def deleteIfExists(path: String): Unit = Some(path)
-    .map(new Path(_))
-    .filter(fs.exists)
-    .foreach(fs.delete(_, true))
-
-  private lazy val fs = FileSystem.get(sc.hadoopConfiguration)
+  protected[this] lazy val fs = FileSystem.get(sc.hadoopConfiguration)
 
 }

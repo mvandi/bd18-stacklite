@@ -2,7 +2,10 @@ package it.unibo.bd18.stacklite;
 
 import it.unibo.bd18.util.Pair;
 import org.apache.commons.collections.ComparatorUtils;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 
+import java.io.IOException;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -50,6 +53,23 @@ public final class Utils {
         return String.format("(%d,%d)", c.get(Calendar.YEAR), c.get(Calendar.MONTH) + 1);
     }
 
+    public static void deleteIfExists(FileSystem fs, Path first, Path... more) throws IOException {
+        deleteIfExists(fs, false, first, more);
+    }
+
+    public static void deleteIfExists(FileSystem fs, boolean recursive, Path first, Path... more) throws IOException {
+        deleteIfExists0(fs, recursive, first);
+        for (Path path : more) {
+            deleteIfExists0(fs, recursive, path);
+        }
+    }
+
+    private static void deleteIfExists0(FileSystem fs, boolean recursive, Path path) throws IOException {
+        if (fs.exists(path)) {
+            fs.delete(path, recursive);
+        }
+    }
+
     public static synchronized Date readDate(String s) {
         try {
             return s.equals("NA") ? null : df.parse(s);
@@ -74,9 +94,6 @@ public final class Utils {
         return i == null ? "NA" : Integer.toString(i);
     }
 
-    private Utils() {
-    }
-
     private static <K, V extends Comparable<? super V>> Comparator<Entry<K, V>> getComparator(final boolean ascending) {
         return new Comparator<Entry<K, V>>() {
             private final Comparator<Entry<K, V>> comparator = getComparator();
@@ -96,7 +113,9 @@ public final class Utils {
                 return comparator.compare(a, b);
             }
         };
+    }
 
+    private Utils() {
     }
 
 }

@@ -4,13 +4,13 @@ import it.unibo.bd18.util.PairWritable;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.Text;
 
-public class TextIntPairWritable extends PairWritable<Text, IntWritable> {
+public class TextIntWritable extends PairWritable<Text, IntWritable> {
 
-    public static TextIntPairWritable create(Text left, IntWritable right) {
-        return new TextIntPairWritable(left, right);
+    public static TextIntWritable create(Text left, IntWritable right) {
+        return new TextIntWritable(left, right);
     }
 
-    public static TextIntPairWritable create(String left, int right) {
+    public static TextIntWritable create(String left, int right) {
         return create(new Text(left), new IntWritable(right));
     }
 
@@ -18,11 +18,11 @@ public class TextIntPairWritable extends PairWritable<Text, IntWritable> {
         return String.format("(%s,%d)", left, right);
     }
 
-    public static TextIntPairWritable create(Text text) {
+    public static TextIntWritable create(Text text) {
         return create(text.toString());
     }
 
-    public static TextIntPairWritable create(String text) {
+    public static TextIntWritable create(String text) {
         final int lastComma = text.lastIndexOf(",");
 
         final Text left = new Text(text.substring(1, lastComma));
@@ -31,11 +31,11 @@ public class TextIntPairWritable extends PairWritable<Text, IntWritable> {
         return create(left, right);
     }
 
-    public TextIntPairWritable() {
+    public TextIntWritable() {
         super();
     }
 
-    private TextIntPairWritable(Text left, IntWritable right) {
+    private TextIntWritable(Text left, IntWritable right) {
         super(left, right);
     }
 

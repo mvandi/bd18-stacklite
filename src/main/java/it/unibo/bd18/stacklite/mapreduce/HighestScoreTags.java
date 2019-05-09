@@ -31,7 +31,7 @@ public final class HighestScoreTags {
                 job.setJarByClass(mainClass);
 
                 job.setMapOutputKeyClass(Text.class);
-                job.setMapOutputValueClass(TextIntPairWritable.class);
+                job.setMapOutputValueClass(TextIntWritable.class);
                 job.setOutputKeyClass(Text.class);
                 job.setOutputValueClass(Text.class);
 
@@ -46,29 +46,29 @@ public final class HighestScoreTags {
         };
     }
 
-    public static final class InputMapper extends Mapper<Text, Text, Text, TextIntPairWritable> {
+    public static final class InputMapper extends Mapper<Text, Text, Text, TextIntWritable> {
         @Override
         protected void map(Text key, Text value, Context context) throws IOException, InterruptedException {
-            context.write(key, TextIntPairWritable.create(value));
+            context.write(key, TextIntWritable.create(value));
         }
     }
 
-    public static final class Combiner extends Reducer<Text, TextIntPairWritable, Text, TextIntPairWritable> {
+    public static final class Combiner extends Reducer<Text, TextIntWritable, Text, TextIntWritable> {
         @Override
-        protected void reduce(Text key, Iterable<TextIntPairWritable> values, Context context) throws IOException, InterruptedException {
+        protected void reduce(Text key, Iterable<TextIntWritable> values, Context context) throws IOException, InterruptedException {
             final Map<String, Integer> tags = sumScoresByTag(values);
             for (final Entry<String, Integer> e : tags.entrySet()) {
-                final TextIntPairWritable valueOut = TextIntPairWritable.create(e.getKey(), e.getValue());
+                final TextIntWritable valueOut = TextIntWritable.create(e.getKey(), e.getValue());
                 context.write(key, valueOut);
             }
         }
     }
 
-    public static final class Finisher extends Reducer<Text, TextIntPairWritable, Text, Text> {
+    public static final class Finisher extends Reducer<Text, TextIntWritable, Text, Text> {
         private final Text valueOut = new Text();
 
         @Override
-        protected void reduce(Text key, Iterable<TextIntPairWritable> values, Context context) throws IOException, InterruptedException {
+        protected void reduce(Text key, Iterable<TextIntWritable> values, Context context) throws IOException, InterruptedException {
             final Map<String, Integer> tags = sumScoresByTag(values);
             final List<Pair<String, Integer>> result = Utils.sortedByValue(tags, false).subList(0, 5);
             valueOut.set(result.toString());
@@ -76,9 +76,9 @@ public final class HighestScoreTags {
         }
     }
 
-    private static Map<String, Integer> sumScoresByTag(Iterable<? extends TextIntPairWritable> values) {
+    private static Map<String, Integer> sumScoresByTag(Iterable<? extends TextIntWritable> values) {
         final Map<String, Integer> tags = new HashMap<>();
-        for (final TextIntPairWritable value : values) {
+        for (final TextIntWritable value : values) {
             final Pair<Text, IntWritable> t = value.get();
             final String tag = t.left().toString();
             final int score = t.right().get();

@@ -150,7 +150,7 @@ public final class Join {
         }
 
         private void write(Context context, String tag, int score) throws IOException, InterruptedException {
-            final Text valueOut = new Text(TextIntPairWritable.format(tag, score));
+            final Text valueOut = new Text(TextIntWritable.format(tag, score));
             context.write(keyOut, valueOut);
         }
     }

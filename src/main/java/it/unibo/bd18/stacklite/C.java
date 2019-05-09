@@ -3,8 +3,6 @@ package it.unibo.bd18.stacklite;
 import java.text.ParseException;
 import java.util.Date;
 
-import static it.unibo.bd18.stacklite.Utils.df;
-
 public final class C {
 
     public static final class dates {
@@ -13,8 +11,8 @@ public final class C {
 
         static {
             try {
-                startDate = df.parse("2012-01-01T00:00:00Z");
-                endDate = df.parse("2012-12-31T23:59:59Z");
+                startDate = Utils.df.parse("2012-01-01T00:00:00Z");
+                endDate = Utils.df.parse("2012-12-31T23:59:59Z");
             } catch (final ParseException e) {
                 throw new RuntimeException(e);
             }

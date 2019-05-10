@@ -1,5 +1,6 @@
 package it.unibo.bd18.stacklite.mapreduce;
 
+import it.unibo.bd18.stacklite.C.dates;
 import it.unibo.bd18.stacklite.QuestionData;
 import it.unibo.bd18.stacklite.QuestionTagData;
 import it.unibo.bd18.stacklite.Utils;
@@ -19,9 +20,6 @@ import java.io.IOException;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-
-import static it.unibo.bd18.stacklite.C.dates.endDate;
-import static it.unibo.bd18.stacklite.C.dates.startDate;
 
 public final class Join {
 
@@ -85,7 +83,7 @@ public final class Join {
 
         @Override
         protected boolean filter(QuestionData questionData) {
-            return Utils.between(questionData.creationDate(), startDate, endDate);
+            return Utils.between(questionData.creationDate(), dates.startDate, dates.endDate);
         }
 
         @Override

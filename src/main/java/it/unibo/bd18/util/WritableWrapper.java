@@ -1,8 +1,7 @@
 package it.unibo.bd18.util;
 
+import org.apache.commons.lang3.Validate;
 import org.apache.hadoop.io.Writable;
-
-import java.util.Objects;
 
 public abstract class WritableWrapper<T> implements Writable {
 
@@ -17,7 +16,7 @@ public abstract class WritableWrapper<T> implements Writable {
     }
 
     public T get() {
-        Objects.requireNonNull(obj, "obj is null");
+        Validate.notNull(obj, "obj is null");
         return obj;
     }
 

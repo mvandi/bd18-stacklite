@@ -28,11 +28,11 @@ public final class Job1 extends Configured implements Tool {
         try (final FileSystem fs = FileSystem.get(conf)) {
             Utils.deleteIfExists(fs, true, tempPath, resultPath);
 
-            final CompositeJob job = new CompositeJob()
-                    .add(Join.create(mainClass, conf, questionsPath, questionTagsPath, tempPath))
-                    .add(HighestScoreTags.create(mainClass, conf, tempPath, resultPath));
             try {
-                return job.waitForCompletion(true) ? 0 : 1;
+                return new CompositeJob()
+                        .add(Join.create(mainClass, conf, questionsPath, questionTagsPath, tempPath))
+                        .add(HighestScoreTags.create(mainClass, conf, tempPath, resultPath))
+                        .waitForCompletion(true) ? 0 : 1;
             } finally {
                 Utils.deleteIfExists(fs, true, tempPath);
             }

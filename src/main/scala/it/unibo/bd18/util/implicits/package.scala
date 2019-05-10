@@ -42,16 +42,6 @@ package object implicits {
     def flatten: RDD[T] = rdd.filter(_.nonEmpty).flatMap(identity)
   }
 
-  implicit class RichSparkContext(private val sc: SparkContext) {
-    def executorCount: Int = sc.statusTracker.getExecutorInfos.length - 1
-
-    def coresPerExecutor: Int = sc.range(0, 1).map(_ => Runtime.getRuntime.availableProcessors).first
-
-    def coreCount: Int = coreCount(coresPerExecutor)
-
-    def coreCount(coresPerExecutor: Int): Int = executorCount * coresPerExecutor
-  }
-
   implicit class RichSparkSession(private val spark: SparkSession) {
     def readCSV(path: String, header: Boolean = true): RDD[Row] = spark.read
       .format("csv")

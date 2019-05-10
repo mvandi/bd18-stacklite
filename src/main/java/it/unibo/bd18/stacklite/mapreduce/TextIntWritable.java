@@ -6,16 +6,16 @@ import org.apache.hadoop.io.Text;
 
 public class TextIntWritable extends PairWritable<Text, IntWritable> {
 
+    public static String format(String left, int right) {
+        return String.format("(%s,%d)", left, right);
+    }
+
     public static TextIntWritable create(Text left, IntWritable right) {
         return new TextIntWritable(left, right);
     }
 
     public static TextIntWritable create(String left, int right) {
         return create(new Text(left), new IntWritable(right));
-    }
-
-    public static String format(String left, int right) {
-        return String.format("(%s,%d)", left, right);
     }
 
     public static TextIntWritable create(Text text) {

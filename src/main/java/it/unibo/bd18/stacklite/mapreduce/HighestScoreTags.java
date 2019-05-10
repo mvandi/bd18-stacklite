@@ -3,6 +3,8 @@ package it.unibo.bd18.stacklite.mapreduce;
 import it.unibo.bd18.stacklite.Utils;
 import it.unibo.bd18.util.JobProvider;
 import it.unibo.bd18.util.Pair;
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections.Transformer;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
@@ -71,6 +73,12 @@ public final class HighestScoreTags {
         protected void reduce(Text key, Iterable<TextIntWritable> values, Context context) throws IOException, InterruptedException {
             final Map<String, Integer> tags = sumScoresByTag(values);
             final List<Pair<String, Integer>> result = Utils.sortedByValue(tags, false).subList(0, 5);
+            CollectionUtils.transform(result, new Transformer() {
+                @Override
+                public Object transform(Object input) {
+                    return ((Pair<String, Integer>) input).left();
+                }
+            });
             valueOut.set(result.toString());
             context.write(key, valueOut);
         }

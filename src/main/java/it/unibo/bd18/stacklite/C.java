@@ -14,7 +14,7 @@ public final class C {
         static {
             try {
                 startDate = df.parse("2012-01-01T00:00:00Z");
-                endDate = df.parse("2012-12-31T23:59:59Z");
+                endDate = df.parse("2014-12-31T23:59:59Z");
             } catch (final ParseException e) {
                 throw new RuntimeException(e);
             }
@@ -49,6 +49,22 @@ public final class C {
         }
 
         private tuning() {
+        }
+    }
+
+    public static final class hive {
+        public static final String database = "mvandi_stacklite";
+
+        public static final class tables {
+            public static final String questions = "questions";
+
+            public static final String questionTags = "question_tags";
+
+            private tables() {
+            }
+        }
+
+        private hive() {
         }
     }
 

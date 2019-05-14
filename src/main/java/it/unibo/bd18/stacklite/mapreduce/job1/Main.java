@@ -1,4 +1,4 @@
-package it.unibo.bd18.stacklite.mapreduce;
+package it.unibo.bd18.stacklite.mapreduce.job1;
 
 import it.unibo.bd18.stacklite.Utils;
 import it.unibo.bd18.util.CompositeJob;
@@ -13,7 +13,7 @@ import org.apache.hadoop.util.ToolRunner;
  * Find the first five tags that received the highest sum of scores for each
  * year-month pair (tags sorted in descending order).
  */
-public final class Job1 extends Configured implements Tool {
+public final class Main extends Configured implements Tool {
 
     @Override
     public int run(String... args) throws Exception {
@@ -27,12 +27,11 @@ public final class Job1 extends Configured implements Tool {
 
         try (final FileSystem fs = FileSystem.get(conf)) {
             Utils.deleteIfExists(fs, true, tempPath, resultPath);
-
-            final CompositeJob job = new CompositeJob()
-                    .add(Join.create(mainClass, conf, questionsPath, questionTagsPath, tempPath))
-                    .add(HighestScoreTags.create(mainClass, conf, tempPath, resultPath));
             try {
-                return job.waitForCompletion(true) ? 0 : 1;
+                return new CompositeJob()
+                        .add(new Join(mainClass, conf, questionsPath, questionTagsPath, tempPath))
+                        .add(new HighestScoreTags(mainClass, conf, tempPath, resultPath))
+                        .waitForCompletion(true) ? 0 : 1;
             } finally {
                 Utils.deleteIfExists(fs, true, tempPath);
             }
@@ -40,7 +39,7 @@ public final class Job1 extends Configured implements Tool {
     }
 
     public static void main(String... args) throws Exception {
-        System.exit(ToolRunner.run(new Configuration(), new Job1(), args));
+        System.exit(ToolRunner.run(new Configuration(), new Main(), args));
     }
 
 }

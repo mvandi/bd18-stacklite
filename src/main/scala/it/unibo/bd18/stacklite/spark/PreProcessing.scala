@@ -7,7 +7,7 @@ import org.apache.spark.SparkConf
 object PreProcessing extends StackliteApp {
 
   import implicits._
-  import it.unibo.bd18.stacklite.C.dates._
+  import it.unibo.bd18.stacklite.C.{dates, tuning}
   import it.unibo.bd18.util.implicits._
   import org.apache.spark.HashPartitioner
 
@@ -20,10 +20,10 @@ object PreProcessing extends StackliteApp {
   Utils.deleteIfExists(fs, true, new Path(questionTagsDestPath))
 
   val (questions, questionTags) = questionsRDD
-    .filter(_.creationDate.between(startDate, endDate))
+    .filter(_.creationDate.between(dates.startDate, dates.endDate))
     .keyBy(_.id)
     .join(questionTagsRDD.keyBy(_.id))
-    .partitionBy(new HashPartitioner(sc.coreCount))
+    .partitionBy(new HashPartitioner(tuning.cpu.executorCount * 4))
     .map(_._2)
     .collect
     .unzip

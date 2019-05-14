@@ -42,6 +42,21 @@ public final class Utils {
         return result;
     }
 
+    public static <K, V extends Comparable<? super V>> List<K> sortedKeysByValue(final Map<K, V> m) {
+        return sortedKeysByValue(m, true);
+    }
+
+    public static <K, V extends Comparable<? super V>> List<K> sortedKeysByValue(final Map<K, V> m, final boolean ascending) {
+        final List<Entry<K, V>> entries = new ArrayList<>(m.entrySet());
+        Collections.sort(entries, Utils.<K, V>getComparator(ascending));
+
+        final List<K> result = new ArrayList<>();
+        for (final Entry<K, V> entry : entries)
+            result.add(entry.getKey());
+
+        return result;
+    }
+
     public static boolean between(Date d, Date startDate, Date endDate) {
         assert startDate.compareTo(endDate) < 0;
         return d.compareTo(startDate) >= 0 && d.compareTo(endDate) <= 0;

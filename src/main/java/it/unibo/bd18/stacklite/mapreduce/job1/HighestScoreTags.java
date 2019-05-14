@@ -1,10 +1,9 @@
-package it.unibo.bd18.stacklite.mapreduce;
+package it.unibo.bd18.stacklite.mapreduce.job1;
 
 import it.unibo.bd18.stacklite.Utils;
+import it.unibo.bd18.stacklite.mapreduce.TextIntWritable;
 import it.unibo.bd18.util.JobProvider;
 import it.unibo.bd18.util.Pair;
-import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.collections.Transformer;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
@@ -22,30 +21,38 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-public final class HighestScoreTags {
+public final class HighestScoreTags implements JobProvider {
 
-    public static JobProvider create(final Class<?> mainClass, final Configuration conf, final Path inputPath, final Path outputPath) {
-        return new JobProvider() {
-            @Override
-            public Job get() throws IOException {
-                final Job job = Job.getInstance(conf);
+    private final Class<?> mainClass;
+    private final Configuration conf;
+    private final Path inputPath;
+    private final Path outputPath;
 
-                job.setJarByClass(mainClass);
+    public HighestScoreTags(Class<?> mainClass, Configuration conf, Path inputPath, Path outputPath) {
+        this.mainClass = mainClass;
+        this.conf = conf;
+        this.inputPath = inputPath;
+        this.outputPath = outputPath;
+    }
 
-                job.setMapOutputKeyClass(Text.class);
-                job.setMapOutputValueClass(TextIntWritable.class);
-                job.setOutputKeyClass(Text.class);
-                job.setOutputValueClass(Text.class);
+    @Override
+    public Job get() throws IOException {
+        final Job job = Job.getInstance(conf);
 
-                MultipleInputs.addInputPath(job, inputPath, KeyValueTextInputFormat.class, InputMapper.class);
-                FileOutputFormat.setOutputPath(job, outputPath);
+        job.setJarByClass(mainClass);
 
-                job.setCombinerClass(Combiner.class);
-                job.setReducerClass(Finisher.class);
+        job.setMapOutputKeyClass(Text.class);
+        job.setMapOutputValueClass(TextIntWritable.class);
+        job.setOutputKeyClass(Text.class);
+        job.setOutputValueClass(Text.class);
 
-                return job;
-            }
-        };
+        MultipleInputs.addInputPath(job, inputPath, KeyValueTextInputFormat.class, InputMapper.class);
+        FileOutputFormat.setOutputPath(job, outputPath);
+
+        job.setCombinerClass(Combiner.class);
+        job.setReducerClass(Finisher.class);
+
+        return job;
     }
 
     public static final class InputMapper extends Mapper<Text, Text, Text, TextIntWritable> {
@@ -72,13 +79,7 @@ public final class HighestScoreTags {
         @Override
         protected void reduce(Text key, Iterable<TextIntWritable> values, Context context) throws IOException, InterruptedException {
             final Map<String, Integer> tags = sumScoresByTag(values);
-            final List<Pair<String, Integer>> result = Utils.sortedByValue(tags, false).subList(0, 5);
-            CollectionUtils.transform(result, new Transformer() {
-                @Override
-                public Object transform(Object input) {
-                    return ((Pair<String, Integer>) input).left();
-                }
-            });
+            final List<String> result = Utils.sortedKeysByValue(tags, false).subList(0, 5);
             valueOut.set(result.toString());
             context.write(key, valueOut);
         }
@@ -98,9 +99,6 @@ public final class HighestScoreTags {
             }
         }
         return tags;
-    }
-
-    private HighestScoreTags() {
     }
 
 }

@@ -4,6 +4,8 @@ import it.unibo.bd18.stacklite.C.dates;
 import it.unibo.bd18.stacklite.QuestionData;
 import it.unibo.bd18.stacklite.QuestionTagData;
 import it.unibo.bd18.stacklite.Utils;
+import it.unibo.bd18.stacklite.mapreduce.QuestionTagWritable;
+import it.unibo.bd18.stacklite.mapreduce.QuestionWritable;
 import it.unibo.bd18.util.JobProvider;
 import org.apache.commons.lang.ClassUtils;
 import org.apache.hadoop.conf.Configuration;
@@ -21,30 +23,40 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
-public final class Join {
+public abstract class AbstractJoin implements JobProvider {
 
-    public static JobProvider create(final Class<?> mainClass, final Configuration conf, final Path questionsPath, final Path questionTagsPath, final Path outputPath) {
-        return new JobProvider() {
-            @Override
-            public Job get() throws IOException {
-                final Job job = Job.getInstance(conf);
+    private final Class<?> mainClass;
+    private final Configuration conf;
+    private final Path questionsPath;
+    private final Path questionTagsPath;
+    private final Path outputPath;
 
-                job.setJarByClass(mainClass);
+    public AbstractJoin(Class<?> mainClass, Configuration conf, Path questionsPath, Path questionTagsPath, Path outputPath) {
+        this.mainClass = mainClass;
+        this.conf = conf;
+        this.questionsPath = questionsPath;
+        this.questionTagsPath = questionTagsPath;
+        this.outputPath = outputPath;
+    }
 
-                job.setMapOutputKeyClass(IntWritable.class);
-                job.setMapOutputValueClass(ObjectWritable.class);
-                job.setOutputKeyClass(Text.class);
-                job.setOutputValueClass(Text.class);
+    @Override
+    public Job get() throws IOException {
+        final Job job = Job.getInstance(conf);
 
-                MultipleInputs.addInputPath(job, questionsPath, TextInputFormat.class, QuestionMapper.class);
-                MultipleInputs.addInputPath(job, questionTagsPath, TextInputFormat.class, QuestionTagMapper.class);
-                FileOutputFormat.setOutputPath(job, outputPath);
+        job.setJarByClass(mainClass);
 
-                job.setReducerClass(Combiner.class);
+        job.setMapOutputKeyClass(IntWritable.class);
+        job.setMapOutputValueClass(ObjectWritable.class);
+        job.setOutputKeyClass(getOutputKeyClass());
+        job.setOutputValueClass(getOutputValueClass());
 
-                return job;
-            }
-        };
+        MultipleInputs.addInputPath(job, questionsPath, TextInputFormat.class, QuestionMapper.class);
+        MultipleInputs.addInputPath(job, questionTagsPath, TextInputFormat.class, QuestionTagMapper.class);
+        FileOutputFormat.setOutputPath(job, outputPath);
+
+        job.setReducerClass(getReducerClass());
+
+        return job;
     }
 
     private static abstract class AbstractRowMapper<T> extends Mapper<LongWritable, Text, IntWritable, ObjectWritable> {
@@ -114,46 +126,10 @@ public final class Join {
         }
     }
 
-    public static class Combiner extends Reducer<IntWritable, ObjectWritable, Text, Text> {
-        private final Text keyOut = new Text();
+    protected abstract Class<? extends Reducer> getReducerClass();
 
-        @Override
-        protected void reduce(IntWritable key, Iterable<ObjectWritable> values, Context context) throws IOException, InterruptedException {
-            int score = 0;
-            boolean scoreAssigned = false;
-            final List<String> pendingTags = new LinkedList<>();
+    protected abstract Class<?> getOutputKeyClass();
 
-            for (final ObjectWritable value : values) {
-                Class valueClass = value.getDeclaredClass();
-                if (ClassUtils.isAssignable(valueClass, QuestionWritable.class)) {
-                    if (scoreAssigned)
-                        throw new IllegalStateException("Multiple questions for key " + key);
-                    final QuestionData question = ((QuestionWritable) value.get()).get();
-                    keyOut.set(Utils.format(question.creationDate()));
-                    score = question.score();
-                    final Iterator<String> it = pendingTags.iterator();
-                    while (it.hasNext()) {
-                        write(context, it.next(), score);
-                        it.remove();
-                    }
-                    scoreAssigned = true;
-                } else if (ClassUtils.isAssignable(valueClass, QuestionTagWritable.class)) {
-                    final String tag = ((QuestionTagWritable) value.get()).get().tag();
-                    if (scoreAssigned)
-                        write(context, tag, score);
-                    else
-                        pendingTags.add(tag);
-                }
-            }
-        }
-
-        private void write(Context context, String tag, int score) throws IOException, InterruptedException {
-            final Text valueOut = new Text(TextIntWritable.format(tag, score));
-            context.write(keyOut, valueOut);
-        }
-    }
-
-    private Join() {
-    }
+    protected abstract Class<?> getOutputValueClass();
 
 }

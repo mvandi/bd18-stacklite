@@ -62,6 +62,7 @@ public final class Join extends AbstractJoin {
                         write(context, it.next(), score);
                         it.remove();
                     }
+                    pendingTags.clear();
                     scoreAssigned = true;
                 } else if (ClassUtils.isAssignable(valueClass, QuestionTagWritable.class)) {
                     final String tag = ((QuestionTagWritable) value.get()).get().tag();

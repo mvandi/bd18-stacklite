@@ -4,7 +4,7 @@ import it.unibo.bd18.util.PairWritable;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.Text;
 
-public class TextIntWritable extends PairWritable<Text, IntWritable> {
+public final class TextIntWritable extends PairWritable<Text, IntWritable> {
 
     public static String format(String left, int right) {
         return String.format("(%s,%d)", left, right);

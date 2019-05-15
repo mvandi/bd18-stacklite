@@ -4,10 +4,7 @@ import it.unibo.bd18.stacklite.C.dates;
 import it.unibo.bd18.stacklite.QuestionData;
 import it.unibo.bd18.stacklite.QuestionTagData;
 import it.unibo.bd18.stacklite.Utils;
-import it.unibo.bd18.stacklite.mapreduce.QuestionTagWritable;
-import it.unibo.bd18.stacklite.mapreduce.QuestionWritable;
 import it.unibo.bd18.util.JobProvider;
-import org.apache.commons.lang.ClassUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.*;
@@ -19,9 +16,6 @@ import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 
 import java.io.IOException;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
 
 public abstract class AbstractJoin implements JobProvider {
 

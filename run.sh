@@ -15,7 +15,6 @@ fi
 QUESTIONS_PATH=$2
 QUESTIONTAGS_PATH=$3
 
-
 if [ "$1" == "--mapreduce" ]; then
     MAPREDUCE=1
     JOBTYPE=mapreduce

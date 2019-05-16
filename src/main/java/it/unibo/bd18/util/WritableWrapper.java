@@ -1,6 +1,6 @@
 package it.unibo.bd18.util;
 
-import org.apache.commons.lang3.Validate;
+import org.apache.commons.lang.Validate;
 import org.apache.hadoop.io.Writable;
 
 public abstract class WritableWrapper<T> implements Writable {

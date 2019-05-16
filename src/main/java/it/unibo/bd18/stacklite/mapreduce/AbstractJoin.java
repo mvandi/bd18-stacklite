@@ -5,6 +5,7 @@ import it.unibo.bd18.stacklite.QuestionData;
 import it.unibo.bd18.stacklite.QuestionTagData;
 import it.unibo.bd18.stacklite.Utils;
 import it.unibo.bd18.util.JobProvider;
+import org.apache.commons.lang.ClassUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.*;
@@ -16,6 +17,9 @@ import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 
 import java.io.IOException;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
 
 public abstract class AbstractJoin implements JobProvider {
 
@@ -48,10 +52,24 @@ public abstract class AbstractJoin implements JobProvider {
         MultipleInputs.addInputPath(job, questionTagsPath, TextInputFormat.class, getQuestionTagMapperClass());
         FileOutputFormat.setOutputPath(job, outputPath);
 
-        job.setReducerClass(getFinisherClass());
+        job.setReducerClass(getCombinerClass());
 
         return job;
     }
+
+    protected Class<? extends QuestionMapperBase> getQuestionMapperClass() {
+        return QuestionMapperBase.class;
+    }
+
+    protected Class<? extends QuestionTagMapperBase> getQuestionTagMapperClass() {
+        return QuestionTagMapperBase.class;
+    }
+
+    protected abstract Class<? extends CombinerBase> getCombinerClass();
+
+    protected abstract Class<?> getOutputKeyClass();
+
+    protected abstract Class<?> getOutputValueClass();
 
     private static abstract class AbstractRowMapper<T> extends Mapper<LongWritable, Text, IntWritable, ObjectWritable> {
         private final IntWritable keyOut = new IntWritable();
@@ -120,18 +138,45 @@ public abstract class AbstractJoin implements JobProvider {
         }
     }
 
-    protected Class<? extends QuestionMapperBase> getQuestionMapperClass() {
-        return QuestionMapperBase.class;
+    public static abstract class CombinerBase<K, V> extends Reducer<IntWritable, ObjectWritable, K, V> {
+        @Override
+        protected final void reduce(IntWritable key, Iterable<ObjectWritable> values, Context context) throws IOException, InterruptedException {
+            QuestionData question = null;
+            final List<QuestionTagData> pendingTags = new LinkedList<>();
+
+            preReduce();
+            for (final ObjectWritable value : values) {
+                final Class valueClass = value.getDeclaredClass();
+                if (ClassUtils.isAssignable(valueClass, QuestionWritable.class)) {
+                    if (question != null)
+                        throw new IllegalStateException("Multiple questions for key " + key);
+                    question = ((QuestionWritable) value.get()).get();
+                    final Iterator<QuestionTagData> it = pendingTags.iterator();
+                    while (it.hasNext()) {
+                        final QuestionTagData tag = it.next();
+                        context.write(keyOut(question, tag), valueOut(question, tag));
+                        it.remove();
+                    }
+                } else if (ClassUtils.isAssignable(valueClass, QuestionTagWritable.class)) {
+                    final QuestionTagData tag = ((QuestionTagWritable) value.get()).get();
+                    if (question != null)
+                        context.write(keyOut(question, tag), valueOut(question, tag));
+                    else
+                        pendingTags.add(tag);
+                }
+            }
+            postReduce();
+        }
+
+        protected abstract K keyOut(QuestionData question, QuestionTagData tag);
+
+        protected abstract V valueOut(QuestionData question, QuestionTagData tag);
+
+        protected void preReduce() {
+        }
+
+        protected void postReduce() {
+        }
     }
-
-    protected Class<? extends QuestionTagMapperBase> getQuestionTagMapperClass() {
-        return QuestionTagMapperBase.class;
-    }
-
-    protected abstract Class<? extends Reducer> getFinisherClass();
-
-    protected abstract Class<?> getOutputKeyClass();
-
-    protected abstract Class<?> getOutputValueClass();
 
 }

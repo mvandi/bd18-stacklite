@@ -1,7 +1,7 @@
 package it.unibo.bd18.stacklite.mapreduce.job1;
 
 import it.unibo.bd18.stacklite.Utils;
-import it.unibo.bd18.stacklite.mapreduce.TextIntWritable;
+import it.unibo.bd18.stacklite.mapreduce.TagScore;
 import it.unibo.bd18.util.JobProvider;
 import it.unibo.bd18.util.Pair;
 import org.apache.hadoop.conf.Configuration;
@@ -42,7 +42,7 @@ public final class HighestScoreTags implements JobProvider {
         job.setJarByClass(mainClass);
 
         job.setMapOutputKeyClass(Text.class);
-        job.setMapOutputValueClass(TextIntWritable.class);
+        job.setMapOutputValueClass(TagScore.class);
         job.setOutputKeyClass(Text.class);
         job.setOutputValueClass(Text.class);
 
@@ -55,29 +55,29 @@ public final class HighestScoreTags implements JobProvider {
         return job;
     }
 
-    public static final class InputMapper extends Mapper<Text, Text, Text, TextIntWritable> {
+    public static final class InputMapper extends Mapper<Text, Text, Text, TagScore> {
         @Override
         protected void map(Text key, Text value, Context context) throws IOException, InterruptedException {
-            context.write(key, TextIntWritable.create(value));
+            context.write(key, TagScore.create(value));
         }
     }
 
-    public static final class Combiner extends Reducer<Text, TextIntWritable, Text, TextIntWritable> {
+    public static final class Combiner extends Reducer<Text, TagScore, Text, TagScore> {
         @Override
-        protected void reduce(Text key, Iterable<TextIntWritable> values, Context context) throws IOException, InterruptedException {
+        protected void reduce(Text key, Iterable<TagScore> values, Context context) throws IOException, InterruptedException {
             final Map<String, Integer> tags = sumScoresByTag(values);
             for (final Entry<String, Integer> e : tags.entrySet()) {
-                final TextIntWritable valueOut = TextIntWritable.create(e.getKey(), e.getValue());
+                final TagScore valueOut = TagScore.create(e.getKey(), e.getValue());
                 context.write(key, valueOut);
             }
         }
     }
 
-    public static final class Finisher extends Reducer<Text, TextIntWritable, Text, Text> {
+    public static final class Finisher extends Reducer<Text, TagScore, Text, Text> {
         private final Text valueOut = new Text();
 
         @Override
-        protected void reduce(Text key, Iterable<TextIntWritable> values, Context context) throws IOException, InterruptedException {
+        protected void reduce(Text key, Iterable<TagScore> values, Context context) throws IOException, InterruptedException {
             final Map<String, Integer> tags = sumScoresByTag(values);
 //            final List<String> result = Utils.sortedKeysByValue(tags, false).subList(0, 5);
             List<Pair<String, Integer>> result = Utils.sortedByValue(tags, false).subList(0, 5);
@@ -86,12 +86,11 @@ public final class HighestScoreTags implements JobProvider {
         }
     }
 
-    private static Map<String, Integer> sumScoresByTag(Iterable<? extends TextIntWritable> values) {
+    private static Map<String, Integer> sumScoresByTag(Iterable<? extends TagScore> values) {
         final Map<String, Integer> tags = new HashMap<>();
-        for (final TextIntWritable value : values) {
-            final Pair<Text, IntWritable> t = value.get();
-            final String tag = t.left().toString();
-            final int score = t.right().get();
+        for (final TagScore value : values) {
+            final String tag = value.tag();
+            final int score = value.score();
             final Integer oldScore = tags.get(tag);
             if (oldScore != null) {
                 tags.put(tag, oldScore + score);

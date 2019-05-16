@@ -145,6 +145,7 @@ public abstract class AbstractJoin implements JobProvider {
             final List<QuestionTagData> pendingTags = new LinkedList<>();
 
             preReduce();
+
             for (final ObjectWritable value : values) {
                 final Class valueClass = value.getDeclaredClass();
                 if (ClassUtils.isAssignable(valueClass, QuestionWritable.class)) {
@@ -153,24 +154,30 @@ public abstract class AbstractJoin implements JobProvider {
                     question = ((QuestionWritable) value.get()).get();
                     final Iterator<QuestionTagData> it = pendingTags.iterator();
                     while (it.hasNext()) {
-                        final QuestionTagData tag = it.next();
-                        context.write(keyOut(question, tag), valueOut(question, tag));
+                        write(context, question, it.next());
                         it.remove();
                     }
                 } else if (ClassUtils.isAssignable(valueClass, QuestionTagWritable.class)) {
                     final QuestionTagData tag = ((QuestionTagWritable) value.get()).get();
-                    if (question != null)
-                        context.write(keyOut(question, tag), valueOut(question, tag));
-                    else
+                    if (question != null) {
+                        write(context, question, tag);
+                    } else
                         pendingTags.add(tag);
                 }
             }
+
             postReduce();
         }
 
-        protected abstract K keyOut(QuestionData question, QuestionTagData tag);
+        private void write(Context context, QuestionData question, QuestionTagData tag) throws IOException, InterruptedException {
+            final K key = computeOutputKey(question, tag);
+            final V value = computeOutputValue(question, tag);
+            context.write(key, value);
+        }
 
-        protected abstract V valueOut(QuestionData question, QuestionTagData tag);
+        protected abstract K computeOutputKey(QuestionData question, QuestionTagData tag);
+
+        protected abstract V computeOutputValue(QuestionData question, QuestionTagData tag);
 
         protected void preReduce() {
         }

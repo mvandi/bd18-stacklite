@@ -4,25 +4,25 @@ import it.unibo.bd18.util.PairWritable;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.Text;
 
-public class TextIntWritable extends PairWritable<Text, IntWritable> {
+public class TagScore extends PairWritable<Text, IntWritable> {
 
     public static String format(String left, int right) {
         return String.format("(%s,%d)", left, right);
     }
 
-    public static TextIntWritable create(Text left, IntWritable right) {
-        return new TextIntWritable(left, right);
+    public static TagScore create(Text left, IntWritable right) {
+        return new TagScore(left, right);
     }
 
-    public static TextIntWritable create(String left, int right) {
+    public static TagScore create(String left, int right) {
         return create(new Text(left), new IntWritable(right));
     }
 
-    public static TextIntWritable create(Text text) {
+    public static TagScore create(Text text) {
         return create(text.toString());
     }
 
-    public static TextIntWritable create(String text) {
+    public static TagScore create(String text) {
         final int lastComma = text.lastIndexOf(",");
 
         final Text left = new Text(text.substring(1, lastComma));
@@ -31,11 +31,19 @@ public class TextIntWritable extends PairWritable<Text, IntWritable> {
         return create(left, right);
     }
 
-    public TextIntWritable() {
+    public String tag() {
+        return get().left().toString();
+    }
+
+    public int score() {
+        return get().right().get();
+    }
+
+    public TagScore() {
         super();
     }
 
-    private TextIntWritable(Text left, IntWritable right) {
+    private TagScore(Text left, IntWritable right) {
         super(left, right);
     }
 

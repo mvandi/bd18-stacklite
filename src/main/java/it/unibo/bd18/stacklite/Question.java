@@ -3,7 +3,7 @@ package it.unibo.bd18.stacklite;
 import java.io.Serializable;
 import java.util.Date;
 
-public final class QuestionData implements Serializable {
+public final class Question implements Serializable {
 
     private final int id;
     private final Date creationDate;
@@ -13,12 +13,12 @@ public final class QuestionData implements Serializable {
     private final Integer ownerUserId;
     private final Integer answerCount;
 
-    public static QuestionData create(String row) {
+    public static Question create(String row) {
         return create(row.split("\\s*,\\s*"));
     }
 
-    public static QuestionData create(String[] row) {
-        return new QuestionData(
+    public static Question create(String[] row) {
+        return new Question(
                 Utils.readInt(row[0]),
                 Utils.readDate(row[1]),
                 Utils.readDate(row[2]),
@@ -28,7 +28,7 @@ public final class QuestionData implements Serializable {
                 Utils.readInt(row[6], true));
     }
 
-    public QuestionData(int id, Date creationDate, Date closedDate, Date deletionDate, int score, Integer ownerUserId, Integer answerCount) {
+    public Question(int id, Date creationDate, Date closedDate, Date deletionDate, int score, Integer ownerUserId, Integer answerCount) {
         this.id = id;
         this.creationDate = creationDate;
         this.closedDate = closedDate;

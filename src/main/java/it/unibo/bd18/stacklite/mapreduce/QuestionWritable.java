@@ -1,15 +1,15 @@
 package it.unibo.bd18.stacklite.mapreduce;
 
-import it.unibo.bd18.stacklite.QuestionData;
+import it.unibo.bd18.stacklite.Question;
 import it.unibo.bd18.util.WritableWrapper;
 
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
-public final class QuestionWritable extends WritableWrapper<QuestionData> {
+public final class QuestionWritable extends WritableWrapper<Question> {
 
-    public static QuestionWritable create(QuestionData question) {
+    public static QuestionWritable create(Question question) {
         return new QuestionWritable(question);
     }
 
@@ -17,7 +17,7 @@ public final class QuestionWritable extends WritableWrapper<QuestionData> {
         super();
     }
 
-    private QuestionWritable(QuestionData question) {
+    private QuestionWritable(Question question) {
         super(question);
     }
 
@@ -28,6 +28,6 @@ public final class QuestionWritable extends WritableWrapper<QuestionData> {
 
     @Override
     public void readFields(DataInput in) throws IOException {
-        obj = QuestionData.create(in.readLine());
+        obj = Question.create(in.readLine());
     }
 }

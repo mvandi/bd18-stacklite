@@ -1,10 +1,11 @@
 package it.unibo.bd18.stacklite.mapreduce;
 
 import it.unibo.bd18.stacklite.C.dates;
-import it.unibo.bd18.stacklite.QuestionData;
-import it.unibo.bd18.stacklite.QuestionTagData;
+import it.unibo.bd18.stacklite.Question;
+import it.unibo.bd18.stacklite.QuestionTag;
 import it.unibo.bd18.stacklite.Utils;
 import it.unibo.bd18.util.JobProvider;
+import org.apache.commons.lang.ClassUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.*;
@@ -16,6 +17,9 @@ import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 
 import java.io.IOException;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
 
 public abstract class AbstractJoin implements JobProvider {
 
@@ -34,7 +38,7 @@ public abstract class AbstractJoin implements JobProvider {
     }
 
     @Override
-    public Job get() throws IOException {
+    public final Job get() throws IOException {
         final Job job = Job.getInstance(conf);
 
         job.setJarByClass(mainClass);
@@ -44,14 +48,28 @@ public abstract class AbstractJoin implements JobProvider {
         job.setOutputKeyClass(getOutputKeyClass());
         job.setOutputValueClass(getOutputValueClass());
 
-        MultipleInputs.addInputPath(job, questionsPath, TextInputFormat.class, QuestionMapper.class);
-        MultipleInputs.addInputPath(job, questionTagsPath, TextInputFormat.class, QuestionTagMapper.class);
+        MultipleInputs.addInputPath(job, questionsPath, TextInputFormat.class, getQuestionMapperClass());
+        MultipleInputs.addInputPath(job, questionTagsPath, TextInputFormat.class, getQuestionTagMapperClass());
         FileOutputFormat.setOutputPath(job, outputPath);
 
-        job.setReducerClass(getReducerClass());
+        job.setReducerClass(getJoinerClass());
 
         return job;
     }
+
+    protected Class<? extends QuestionMapperBase> getQuestionMapperClass() {
+        return QuestionMapperBase.class;
+    }
+
+    protected Class<? extends QuestionTagMapperBase> getQuestionTagMapperClass() {
+        return QuestionTagMapperBase.class;
+    }
+
+    protected abstract Class<? extends JoinerBase> getJoinerClass();
+
+    protected abstract Class<?> getOutputKeyClass();
+
+    protected abstract Class<?> getOutputValueClass();
 
     private static abstract class AbstractRowMapper<T> extends Mapper<LongWritable, Text, IntWritable, ObjectWritable> {
         private final IntWritable keyOut = new IntWritable();
@@ -81,49 +99,91 @@ public abstract class AbstractJoin implements JobProvider {
         protected abstract int classifier(T t);
     }
 
-    public static final class QuestionMapper extends AbstractRowMapper<QuestionData> {
+    public static class QuestionMapperBase extends AbstractRowMapper<Question> {
         @Override
-        protected QuestionData mapper(String row) {
-            return QuestionData.create(row);
+        protected final Question mapper(String row) {
+            return Question.create(row);
         }
 
         @Override
-        protected boolean filter(QuestionData questionData) {
-            return Utils.between(questionData.creationDate(), dates.startDate, dates.endDate);
+        protected boolean filter(Question question) {
+            return Utils.between(question.creationDate(), dates.startDate, dates.endDate);
         }
 
         @Override
-        protected QuestionWritable mapper(QuestionData question) {
+        protected final QuestionWritable mapper(Question question) {
             return QuestionWritable.create(question);
         }
 
         @Override
-        protected int classifier(QuestionData question) {
+        protected final int classifier(Question question) {
             return question.id();
         }
     }
 
-    public static final class QuestionTagMapper extends AbstractRowMapper<QuestionTagData> {
+    public static class QuestionTagMapperBase extends AbstractRowMapper<QuestionTag> {
         @Override
-        protected QuestionTagData mapper(String row) {
-            return QuestionTagData.create(row);
+        protected final QuestionTag mapper(String row) {
+            return QuestionTag.create(row);
         }
 
         @Override
-        protected QuestionTagWritable mapper(QuestionTagData tag) {
+        protected final QuestionTagWritable mapper(QuestionTag tag) {
             return QuestionTagWritable.create(tag);
         }
 
         @Override
-        protected int classifier(QuestionTagData tag) {
+        protected final int classifier(QuestionTag tag) {
             return tag.id();
         }
     }
 
-    protected abstract Class<? extends Reducer> getReducerClass();
+    public static abstract class JoinerBase<K, V> extends Reducer<IntWritable, ObjectWritable, K, V> {
+        @Override
+        protected final void reduce(IntWritable key, Iterable<ObjectWritable> values, Context context) throws IOException, InterruptedException {
+            Question question = null;
+            final List<QuestionTag> pendingTags = new LinkedList<>();
 
-    protected abstract Class<?> getOutputKeyClass();
+            preReduce();
 
-    protected abstract Class<?> getOutputValueClass();
+            for (final ObjectWritable value : values) {
+                final Class valueClass = value.getDeclaredClass();
+                if (ClassUtils.isAssignable(valueClass, QuestionWritable.class)) {
+                    if (question != null)
+                        throw new IllegalStateException("Multiple questions for key " + key);
+                    question = ((QuestionWritable) value.get()).get();
+                    final Iterator<QuestionTag> it = pendingTags.iterator();
+                    while (it.hasNext()) {
+                        write(context, question, it.next());
+                        it.remove();
+                    }
+                } else if (ClassUtils.isAssignable(valueClass, QuestionTagWritable.class)) {
+                    final QuestionTag tag = ((QuestionTagWritable) value.get()).get();
+                    if (question != null) {
+                        write(context, question, tag);
+                    } else
+                        pendingTags.add(tag);
+                }
+            }
+
+            postReduce();
+        }
+
+        private void write(Context context, Question question, QuestionTag tag) throws IOException, InterruptedException {
+            final K key = computeOutputKey(question, tag);
+            final V value = computeOutputValue(question, tag);
+            context.write(key, value);
+        }
+
+        protected abstract K computeOutputKey(Question question, QuestionTag tag);
+
+        protected abstract V computeOutputValue(Question question, QuestionTag tag);
+
+        protected void preReduce() {
+        }
+
+        protected void postReduce() {
+        }
+    }
 
 }

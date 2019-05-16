@@ -4,10 +4,7 @@ import it.unibo.bd18.stacklite.C.dates;
 import it.unibo.bd18.stacklite.QuestionData;
 import it.unibo.bd18.stacklite.QuestionTagData;
 import it.unibo.bd18.stacklite.Utils;
-import it.unibo.bd18.stacklite.mapreduce.QuestionTagWritable;
-import it.unibo.bd18.stacklite.mapreduce.QuestionWritable;
 import it.unibo.bd18.util.JobProvider;
-import org.apache.commons.lang.ClassUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.*;
@@ -19,9 +16,6 @@ import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 
 import java.io.IOException;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
 
 public abstract class AbstractJoin implements JobProvider {
 
@@ -40,7 +34,7 @@ public abstract class AbstractJoin implements JobProvider {
     }
 
     @Override
-    public Job get() throws IOException {
+    public final Job get() throws IOException {
         final Job job = Job.getInstance(conf);
 
         job.setJarByClass(mainClass);
@@ -50,11 +44,11 @@ public abstract class AbstractJoin implements JobProvider {
         job.setOutputKeyClass(getOutputKeyClass());
         job.setOutputValueClass(getOutputValueClass());
 
-        MultipleInputs.addInputPath(job, questionsPath, TextInputFormat.class, QuestionMapper.class);
-        MultipleInputs.addInputPath(job, questionTagsPath, TextInputFormat.class, QuestionTagMapper.class);
+        MultipleInputs.addInputPath(job, questionsPath, TextInputFormat.class, getQuestionMapperClass());
+        MultipleInputs.addInputPath(job, questionTagsPath, TextInputFormat.class, getQuestionTagMapperClass());
         FileOutputFormat.setOutputPath(job, outputPath);
 
-        job.setReducerClass(getReducerClass());
+        job.setReducerClass(getFinisherClass());
 
         return job;
     }
@@ -87,46 +81,54 @@ public abstract class AbstractJoin implements JobProvider {
         protected abstract int classifier(T t);
     }
 
-    public static final class QuestionMapper extends AbstractRowMapper<QuestionData> {
+    public static class QuestionMapperBase extends AbstractRowMapper<QuestionData> {
         @Override
-        protected QuestionData mapper(String row) {
+        protected final QuestionData mapper(String row) {
             return QuestionData.create(row);
         }
 
         @Override
-        protected boolean filter(QuestionData questionData) {
-            return Utils.between(questionData.creationDate(), dates.startDate, dates.endDate);
+        protected boolean filter(QuestionData question) {
+            return Utils.between(question.creationDate(), dates.startDate, dates.endDate);
         }
 
         @Override
-        protected QuestionWritable mapper(QuestionData question) {
+        protected final QuestionWritable mapper(QuestionData question) {
             return QuestionWritable.create(question);
         }
 
         @Override
-        protected int classifier(QuestionData question) {
+        protected final int classifier(QuestionData question) {
             return question.id();
         }
     }
 
-    public static final class QuestionTagMapper extends AbstractRowMapper<QuestionTagData> {
+    public static class QuestionTagMapperBase extends AbstractRowMapper<QuestionTagData> {
         @Override
-        protected QuestionTagData mapper(String row) {
+        protected final QuestionTagData mapper(String row) {
             return QuestionTagData.create(row);
         }
 
         @Override
-        protected QuestionTagWritable mapper(QuestionTagData tag) {
+        protected final QuestionTagWritable mapper(QuestionTagData tag) {
             return QuestionTagWritable.create(tag);
         }
 
         @Override
-        protected int classifier(QuestionTagData tag) {
+        protected final int classifier(QuestionTagData tag) {
             return tag.id();
         }
     }
 
-    protected abstract Class<? extends Reducer> getReducerClass();
+    protected Class<? extends QuestionMapperBase> getQuestionMapperClass() {
+        return QuestionMapperBase.class;
+    }
+
+    protected Class<? extends QuestionTagMapperBase> getQuestionTagMapperClass() {
+        return QuestionTagMapperBase.class;
+    }
+
+    protected abstract Class<? extends Reducer> getFinisherClass();
 
     protected abstract Class<?> getOutputKeyClass();
 

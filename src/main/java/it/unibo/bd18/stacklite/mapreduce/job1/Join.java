@@ -26,7 +26,7 @@ public final class Join extends AbstractJoin {
     }
 
     @Override
-    protected Class<? extends Reducer> getReducerClass() {
+    protected Class<? extends Reducer> getFinisherClass() {
         return Combiner.class;
     }
 

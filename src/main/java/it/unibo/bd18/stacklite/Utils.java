@@ -1,7 +1,7 @@
 package it.unibo.bd18.stacklite;
 
 import it.unibo.bd18.util.Pair;
-import org.apache.commons.collections.ComparatorUtils;
+import org.apache.commons.lang.Validate;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 
@@ -14,24 +14,11 @@ import java.util.Map.Entry;
 
 public final class Utils {
 
-    public static final DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
-
-    private static final List<String> headers = Arrays.asList("Id,", ",CreationDate,", ",ClosedDate,", ",DeletionDate,", ",Score,", ",OwnerUserId,", ",AnswerCount", ",Tag");
-
-    public static boolean isHeader(final String row) {
-        for (final String header : headers) {
-            if (row.contains(header)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    public static <K, V extends Comparable<? super V>> List<Pair<K, V>> sortedByValue(final Map<K, V> m) {
+    public static <K, V extends Comparable<? super V>> List<Pair<K, V>> sortedByValue(Map<K, V> m) {
         return sortedByValue(m, true);
     }
 
-    public static <K, V extends Comparable<? super V>> List<Pair<K, V>> sortedByValue(final Map<K, V> m, final boolean ascending) {
+    public static <K, V extends Comparable<? super V>> List<Pair<K, V>> sortedByValue(Map<K, V> m, boolean ascending) {
         final List<Entry<K, V>> entries = new ArrayList<>(m.entrySet());
         Collections.sort(entries, Utils.<K, V>getComparator(ascending));
 
@@ -42,15 +29,15 @@ public final class Utils {
         return result;
     }
 
-    public static <K, V extends Comparable<? super V>> List<K> sortedKeysByValue(final Map<K, V> m) {
+    public static <K, V extends Comparable<? super V>> List<K> sortedKeysByValue(Map<K, V> m) {
         return sortedKeysByValue(m, true);
     }
 
-    public static <K, V extends Comparable<? super V>> List<K> sortedKeysByValue(final Map<K, V> m, final boolean ascending) {
+    public static <K, V extends Comparable<? super V>> List<K> sortedKeysByValue(Map<K, V> m, boolean ascending) {
         final List<Entry<K, V>> entries = new ArrayList<>(m.entrySet());
         Collections.sort(entries, Utils.<K, V>getComparator(ascending));
 
-        final List<K> result = new ArrayList<>();
+        List<K> result = new ArrayList<>();
         for (final Entry<K, V> entry : entries)
             result.add(entry.getKey());
 
@@ -58,7 +45,7 @@ public final class Utils {
     }
 
     public static boolean between(Date d, Date startDate, Date endDate) {
-        assert startDate.compareTo(endDate) < 0;
+        Validate.isTrue(startDate.compareTo(endDate) < 0, "startDate is earlier than endDate");
         return d.compareTo(startDate) >= 0 && d.compareTo(endDate) <= 0;
     }
 
@@ -74,7 +61,7 @@ public final class Utils {
 
     public static void deleteIfExists(FileSystem fs, boolean recursive, Path first, Path... more) throws IOException {
         deleteIfExists0(fs, recursive, first);
-        for (Path path : more) {
+        for (final Path path : more) {
             deleteIfExists0(fs, recursive, path);
         }
     }
@@ -84,6 +71,19 @@ public final class Utils {
             fs.delete(path, recursive);
         }
     }
+
+    private static List<String> headers = Arrays.asList("Id,", ",CreationDate,", ",ClosedDate,", ",DeletionDate,", ",Score,", ",OwnerUserId,", ",AnswerCount", ",Tag");
+
+    public static boolean isHeader(String row) {
+        for (final String header : headers) {
+            if (row.contains(header)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public static DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
 
     public static synchronized Date readDate(String s) {
         try {
@@ -111,16 +111,16 @@ public final class Utils {
 
     private static <K, V extends Comparable<? super V>> Comparator<Entry<K, V>> getComparator(final boolean ascending) {
         return new Comparator<Entry<K, V>>() {
-            private final Comparator<Entry<K, V>> comparator = getComparator();
+            private Comparator<Entry<K, V>> comparator = getComparator();
 
             private Comparator<Entry<K, V>> getComparator() {
-                final Comparator<Entry<K, V>> valueComparator = new Comparator<Entry<K, V>>() {
+                final Comparator<Entry<K, V>> cmp = new Comparator<Entry<K, V>>() {
                     @Override
                     public int compare(Entry<K, V> a, Entry<K, V> b) {
                         return a.getValue().compareTo(b.getValue());
                     }
                 };
-                return ascending ? valueComparator : ComparatorUtils.reversedComparator(valueComparator);
+                return ascending ? cmp : Collections.reverseOrder(cmp);
             }
 
             @Override

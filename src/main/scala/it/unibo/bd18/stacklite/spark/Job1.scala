@@ -34,7 +34,7 @@ object Job1 extends StackliteApp {
         .toSeq
         .sortBy(-_._2)
         .take(5)
-        .map(_._1)
+//        .map(_._1)
         .mkString("[", ", ", "]"))
       .mapPair((x, y) => s"$x\t$y")
   }

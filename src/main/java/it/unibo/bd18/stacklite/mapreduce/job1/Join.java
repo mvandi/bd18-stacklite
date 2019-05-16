@@ -1,7 +1,7 @@
 package it.unibo.bd18.stacklite.mapreduce.job1;
 
-import it.unibo.bd18.stacklite.QuestionData;
-import it.unibo.bd18.stacklite.QuestionTagData;
+import it.unibo.bd18.stacklite.Question;
+import it.unibo.bd18.stacklite.QuestionTag;
 import it.unibo.bd18.stacklite.Utils;
 import it.unibo.bd18.stacklite.mapreduce.AbstractJoin;
 import it.unibo.bd18.stacklite.mapreduce.TagScore;
@@ -16,33 +16,33 @@ public final class Join extends AbstractJoin {
     }
 
     @Override
-    protected Class<? extends CombinerBase> getCombinerClass() {
-        return Combiner.class;
+    protected Class<Joiner> getJoinerClass() {
+        return Joiner.class;
     }
 
     @Override
-    protected Class<?> getOutputKeyClass() {
+    protected Class<Text> getOutputKeyClass() {
         return Text.class;
     }
 
     @Override
-    protected Class<?> getOutputValueClass() {
+    protected Class<Text> getOutputValueClass() {
         return Text.class;
     }
 
-    public static class Combiner extends CombinerBase<Text, Text> {
+    public static class Joiner extends JoinerBase<Text, Text> {
         private Text keyOut;
 
         @Override
-        protected Text computeOutputKey(QuestionData question, QuestionTagData tag) {
+        protected Text computeOutputKey(Question question, QuestionTag tag) {
             if (keyOut == null)
                 keyOut = new Text(Utils.format(question.creationDate()));
             return keyOut;
         }
 
         @Override
-        protected Text computeOutputValue(QuestionData question, QuestionTagData tag) {
-            return new Text(TagScore.format(tag.tag(), question.score()));
+        protected Text computeOutputValue(Question question, QuestionTag tag) {
+            return new Text(TagScore.format(tag.name(), question.score()));
         }
 
         @Override

@@ -26,7 +26,7 @@ object Job1 extends StackliteApp {
     val questionTagsRDD = this.questionTagsRDD.keyBy(_.id)
 
     questionsRDD.join(questionTagsRDD)
-      .mapPair((_, x) => (Utils.format(x._1.creationDate), (x._2.tag, x._1.score)))
+      .mapPair((_, x) => (Utils.format(x._1.creationDate), (x._2.name, x._1.score)))
       .groupByKey
       .partitionBy(new HashPartitioner(tuning.cpu.executorCount * 4))
       .mapValues(_.groupByKey

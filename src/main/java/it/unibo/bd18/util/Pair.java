@@ -26,4 +26,5 @@ public final class Pair<L, R> {
     public String toString() {
         return String.format("(%s,%s)", left, right);
     }
+
 }

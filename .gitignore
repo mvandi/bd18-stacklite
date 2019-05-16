@@ -422,7 +422,7 @@ Session.vim
 # Temporary
 .netrwhist
 *~
-# Auto-generated tag files
+# Auto-generated name files
 tags
 # Persistent undo
 [._]*.un~

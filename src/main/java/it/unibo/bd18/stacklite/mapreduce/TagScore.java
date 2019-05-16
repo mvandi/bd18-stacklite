@@ -1,10 +1,10 @@
 package it.unibo.bd18.stacklite.mapreduce;
 
-import it.unibo.bd18.util.PairWritable;
+import it.unibo.bd18.util.TupleWritable;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.Text;
 
-public class TagScore extends PairWritable<Text, IntWritable> {
+public final class TagScore extends TupleWritable {
 
     public static String format(String left, int right) {
         return String.format("(%s,%d)", left, right);
@@ -32,29 +32,19 @@ public class TagScore extends PairWritable<Text, IntWritable> {
     }
 
     public String tag() {
-        return get().left().toString();
+        return this.<Text>get(0).toString();
     }
 
     public int score() {
-        return get().right().get();
+        return this.<IntWritable>get(1).get();
     }
 
     public TagScore() {
         super();
     }
 
-    private TagScore(Text left, IntWritable right) {
-        super(left, right);
-    }
-
-    @Override
-    protected Text createLeft() {
-        return new Text();
-    }
-
-    @Override
-    protected IntWritable createRight() {
-        return new IntWritable();
+    private TagScore(Text tag, IntWritable score) {
+        super(tag, score);
     }
 
 }

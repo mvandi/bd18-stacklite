@@ -1,23 +1,14 @@
 package it.unibo.bd18.stacklite;
 
-import java.text.ParseException;
 import java.util.Date;
-
-import static it.unibo.bd18.stacklite.Utils.df;
 
 public final class C {
 
     public static final class dates {
-        public static final Date startDate;
-        public static final Date endDate;
+        public static final Date startDate = Utils.readDate("2012-01-01T00:00:00Z");
+        public static final Date endDate = Utils.readDate("2014-12-31T23:59:59Z");
 
-        static {
-            try {
-                startDate = df.parse("2012-01-01T00:00:00Z");
-                endDate = df.parse("2014-12-31T23:59:59Z");
-            } catch (final ParseException e) {
-                throw new RuntimeException(e);
-            }
+        private dates() {
         }
     }
 
@@ -58,7 +49,7 @@ public final class C {
         public static final class data {
             private static final String basePath = hdfs.basePath + "/data";
 
-            public static final String questions = basePath + "/questions.csv";
+            public static final String questions = basePath + "/questionCount.csv";
 
             public static final String questionTags = basePath + "/question_tags.csv";
 
@@ -74,7 +65,7 @@ public final class C {
         public static final String basePath = hdfs.basePath + "/parquet-tables";
 
         public static final class tables {
-            public static final String questions = "questions";
+            public static final String questions = "questionCount";
 
             public static final String questionTags = "question_tags";
 
@@ -83,7 +74,7 @@ public final class C {
         }
 
         public static String table(String tableName) {
-            return basePath + "/tableName";
+            return parquet.basePath + "/" + tableName;
         }
 
         private parquet() {

@@ -18,10 +18,10 @@ import java.io.IOException;
 File in entrata: <tag, domanda>
 -	Count tutte le domande
 -	Count domande aperte
--	maxPartecipation = max (answerCount)
--	Sum(answerCount) di tutte le domande
+-	maxPartecipation = max (totalAnswers)
+-	Sum(totalAnswers) di tutte le domande
 -	Tasso di chiusura = domande aperte/totale domande
--	Partecipazione media = Sum(answerCount)/totale domande
+-	Partecipazione media = Sum(totalAnswers)/totale domande
 -	Bassa = < maxPartecipation/3
 -	Medio = beetween  maxPartecipation/3 and 2(maxPartecipation/3)
 -	Alta = > 2(maxPartecipation/3)
@@ -49,10 +49,9 @@ public class ClosingRateWithAverageParticipation implements JobProvider {
 
         job.setJarByClass(mainClass);
         job.setMapOutputKeyClass(Text.class);
-        job.setMapOutputValueClass(MapOutput.class);
+        job.setMapOutputValueClass(MapOutputValue.class);
         job.setOutputKeyClass(Text.class);
         job.setOutputValueClass(Text.class);
-
 
         MultipleInputs.addInputPath(job, inputPath, KeyValueTextInputFormat.class, InputMapper.class);
         FileOutputFormat.setOutputPath(job, outputPath);
@@ -65,48 +64,49 @@ public class ClosingRateWithAverageParticipation implements JobProvider {
         return job;
     }
 
-    public static final class InputMapper extends Mapper<Text, Text, Text, MapOutput> {
+    public static final class InputMapper extends Mapper<Text, Text, Text, MapOutputValue> {
         @Override
         protected void map(Text key, Text value, Context context) throws IOException, InterruptedException {
             final Question question = Question.create(value);
-            context.write(key, MapOutput.create(question));
+            context.write(key, MapOutputValue.create(question));
         }
     }
 
-    public static final class Combiner extends Reducer<Text, MapOutput, Text, MapOutput> {
+    public static final class Combiner extends Reducer<Text, MapOutputValue, Text, MapOutputValue> {
         @Override
-        protected void reduce(Text key, Iterable<MapOutput> values, Context context) throws IOException, InterruptedException {
+        protected void reduce(Text key, Iterable<MapOutputValue> values, Context context) throws IOException, InterruptedException {
             context.write(key, aggregate(values));
         }
     }
 
-    public static final class Finisher extends Reducer<Text, MapOutput, Text, Text> {
+    public static final class Finisher extends Reducer<Text, MapOutputValue, Text, Text> {
         @Override
-        protected void reduce(Text key, Iterable<MapOutput> values, Context context) throws IOException, InterruptedException {
-            final MapOutput mapOutput = aggregate(values);
+        protected void reduce(Text key, Iterable<MapOutputValue> values, Context context) throws IOException, InterruptedException {
+            final MapOutputValue value = aggregate(values);
 
-            final double totalQuestions = mapOutput.totalQuestions();
-            int openQuestions = mapOutput.openQuestions();
-            final double openingRate = openQuestions / totalQuestions;
+            final int openQuestions = value.openQuestions();
+            final double questionCount = value.questionCount();
+            final int totalAnswers = value.totalAnswers();
 
-            int answerCount = mapOutput.answerCount();
-            final double averageParticipation = answerCount / totalQuestions;
+            final double openingRate = openQuestions / questionCount;
+            final double averageParticipation = totalAnswers / questionCount;
 
-            context.write(key, new Text(String.format("(%d,%d,%d,%.2f%%,%.2f)", openQuestions, (int) totalQuestions, answerCount, openingRate * 100, averageParticipation)));
+            context.write(key, new Text(String.format("(%d,%d,%d,%.2f%%,%.2f)", openQuestions, (int) questionCount, totalAnswers, openingRate * 100, averageParticipation)));
         }
     }
 
-    private static MapOutput aggregate(Iterable<? extends MapOutput> values) {
+    private static MapOutputValue aggregate(Iterable<? extends MapOutputValue> values) {
         int openQuestions = 0;
-        int totalQuestions = 0;
+        int questionCount = 0;
         int totalAnswers = 0;
 
-        for (MapOutput val : values) {
+        for (MapOutputValue val : values) {
             openQuestions += val.openQuestions();
-            totalQuestions += val.totalQuestions();
-            totalAnswers += val.answerCount();
+            questionCount += val.questionCount();
+            totalAnswers += val.totalAnswers();
         }
 
-        return MapOutput.create(openQuestions, totalQuestions, totalAnswers);
+        return MapOutputValue.create(openQuestions, questionCount, totalAnswers);
     }
+
 }

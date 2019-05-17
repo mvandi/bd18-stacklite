@@ -52,8 +52,26 @@ public final class C {
         }
     }
 
-    public static final class hive {
-        public static final String database = "mvandi_stacklite";
+    public static final class hdfs {
+        private static final String basePath = "/user/mvandi/stacklite";
+
+        public static final class data {
+            private static final String basePath = hdfs.basePath + "/data";
+
+            public static final String questions = basePath + "/questions.csv";
+
+            public static final String questionTags = basePath + "/question_tags.csv";
+
+            private data() {
+            }
+        }
+
+        private hdfs() {
+        }
+    }
+
+    public static final class parquet {
+        public static final String basePath = hdfs.basePath + "/parquet-tables";
 
         public static final class tables {
             public static final String questions = "questions";
@@ -64,7 +82,11 @@ public final class C {
             }
         }
 
-        private hive() {
+        public static String table(String tableName) {
+            return basePath + "/tableName";
+        }
+
+        private parquet() {
         }
     }
 

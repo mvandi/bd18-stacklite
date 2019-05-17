@@ -9,6 +9,8 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 
+import static it.unibo.bd18.stacklite.C.hdfs;
+
 /**
  * Find the first five tags that received the highest sum of scores for each
  * year-month pair (tags sorted in descending order).
@@ -17,10 +19,10 @@ public final class Main extends Configured implements Tool {
 
     @Override
     public int run(String... args) throws Exception {
-        final Path questionsPath = new Path(args[0]);
-        final Path questionTagsPath = new Path(args[1]);
-        final Path tempPath = new Path(args[2] + "-temp");
-        final Path resultPath = new Path(args[2]);
+        final Path questionsPath = new Path(hdfs.data.questions);
+        final Path questionTagsPath = new Path(hdfs.data.questionTags);
+        final Path tempPath = new Path(args[0] + "-temp");
+        final Path resultPath = new Path(args[0]);
 
         final Configuration conf = getConf();
         final Class mainClass = getClass();

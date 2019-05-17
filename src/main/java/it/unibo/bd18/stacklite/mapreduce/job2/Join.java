@@ -3,7 +3,6 @@ package it.unibo.bd18.stacklite.mapreduce.job2;
 import it.unibo.bd18.stacklite.Question;
 import it.unibo.bd18.stacklite.QuestionTag;
 import it.unibo.bd18.stacklite.mapreduce.AbstractJoin;
-import it.unibo.bd18.stacklite.mapreduce.QuestionWritable;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
@@ -15,23 +14,23 @@ public class Join extends AbstractJoin {
     }
 
     @Override
-    protected Class<? extends QuestionMapperBase> getQuestionMapperClass() {
+    protected Class<QuestionMapper> getQuestionMapperClass() {
         return QuestionMapper.class;
     }
 
     @Override
-    protected Class<? extends JoinerBase> getJoinerClass() {
+    protected Class<Joiner> getJoinerClass() {
         return Joiner.class;
     }
 
     @Override
-    protected Class<?> getOutputKeyClass() {
+    protected Class<Text> getOutputKeyClass() {
         return Text.class;
     }
 
     @Override
-    protected Class<?> getOutputValueClass() {
-        return QuestionWritable.class;
+    protected Class<Text> getOutputValueClass() {
+        return Text.class;
     }
 
     public static final class QuestionMapper extends QuestionMapperBase {

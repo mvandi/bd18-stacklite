@@ -1,5 +1,7 @@
 package it.unibo.bd18.stacklite;
 
+import org.apache.hadoop.io.Text;
+
 import java.util.Date;
 
 public final class Question {
@@ -11,6 +13,10 @@ public final class Question {
     private final int score;
     private final Integer ownerUserId;
     private final Integer answerCount;
+
+    public static Question create(Text row) {
+        return create(row.toString());
+    }
 
     public static Question create(String row) {
         return create(row.split("\\s*,\\s*"));

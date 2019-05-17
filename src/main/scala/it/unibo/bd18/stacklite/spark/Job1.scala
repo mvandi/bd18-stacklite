@@ -13,9 +13,9 @@ object Job1 extends StackliteApp {
   import it.unibo.bd18.stacklite.C.{dates, tuning}
   import org.apache.spark.{HashPartitioner, SparkConf}
 
-  override protected[this] val conf: SparkConf = new SparkConf().setAppName("Main")
+  override protected[this] val conf: SparkConf = new SparkConf().setAppName("z")
 
-  val resultPath = args(2)
+  val resultPath = args(0)
   Utils.deleteIfExists(fs, true, new Path(resultPath))
 
   val outputRDD = {

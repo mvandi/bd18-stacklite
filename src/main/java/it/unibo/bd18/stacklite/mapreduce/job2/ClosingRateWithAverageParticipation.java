@@ -1,8 +1,6 @@
 package it.unibo.bd18.stacklite.mapreduce.job2;
 
 import it.unibo.bd18.stacklite.Question;
-import it.unibo.bd18.stacklite.mapreduce.TagScore;
-import it.unibo.bd18.stacklite.mapreduce.job1.HighestScoreTags;
 import it.unibo.bd18.util.JobProvider;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
@@ -15,7 +13,6 @@ import org.apache.hadoop.mapreduce.lib.input.MultipleInputs;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 
 import java.io.IOException;
-import java.util.Map;
 
 /*
 File in entrata: <tag, domanda>
@@ -45,6 +42,7 @@ public class ClosingRateWithAverageParticipation implements JobProvider {
         this.inputPath = inputPath;
         this.outputPath = outputPath;
     }
+
     @Override
     public Job get() throws IOException {
         final Job job = Job.getInstance(conf);
@@ -62,10 +60,12 @@ public class ClosingRateWithAverageParticipation implements JobProvider {
         job.setCombinerClass(Combiner.class);
         job.setReducerClass(Finisher.class);
 
+        job.setSortComparatorClass(Text.Comparator.class);
+
         return job;
     }
 
-    public static final class InputMapper extends Mapper<Text,Text, Text, MapOutput> {
+    public static final class InputMapper extends Mapper<Text, Text, Text, MapOutput> {
         @Override
         protected void map(Text key, Text value, Context context) throws IOException, InterruptedException {
             final Question question = Question.create(value);
@@ -73,35 +73,38 @@ public class ClosingRateWithAverageParticipation implements JobProvider {
         }
     }
 
-    public static final class Combiner extends Reducer<Text,MapOutput, Text, MapOutput> {
+    public static final class Combiner extends Reducer<Text, MapOutput, Text, MapOutput> {
         @Override
         protected void reduce(Text key, Iterable<MapOutput> values, Context context) throws IOException, InterruptedException {
             context.write(key, aggregate(values));
         }
     }
 
-    public static final class Finisher extends Reducer<Text,MapOutput, Text, Text> {
+    public static final class Finisher extends Reducer<Text, MapOutput, Text, Text> {
         @Override
         protected void reduce(Text key, Iterable<MapOutput> values, Context context) throws IOException, InterruptedException {
             final MapOutput mapOutput = aggregate(values);
 
             final double totalQuestions = mapOutput.totalQuestions();
-            final double averageParticipation = mapOutput.answerCount()/ totalQuestions;
-            final double closingRate = mapOutput.openQuestions()/ totalQuestions;
+            int openQuestions = mapOutput.openQuestions();
+            final double openingRate = openQuestions / totalQuestions;
 
-            context.write(key, new Text(String.format("(%f,%f)", closingRate, averageParticipation)));
+            int answerCount = mapOutput.answerCount();
+            final double averageParticipation = answerCount / totalQuestions;
+
+            context.write(key, new Text(String.format("(%d,%d,%d,%.2f%%,%.2f)", openQuestions, (int) totalQuestions, answerCount, openingRate * 100, averageParticipation)));
         }
     }
 
     private static MapOutput aggregate(Iterable<? extends MapOutput> values) {
-        int totalAnswers = 0;
         int openQuestions = 0;
         int totalQuestions = 0;
+        int totalAnswers = 0;
 
         for (MapOutput val : values) {
-            totalAnswers += val.answerCount();
             openQuestions += val.openQuestions();
             totalQuestions += val.totalQuestions();
+            totalAnswers += val.answerCount();
         }
 
         return MapOutput.create(openQuestions, totalQuestions, totalAnswers);

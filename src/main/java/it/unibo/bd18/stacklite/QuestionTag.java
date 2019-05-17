@@ -1,8 +1,6 @@
 package it.unibo.bd18.stacklite;
 
-import java.io.Serializable;
-
-public final class QuestionTag implements Serializable {
+public final class QuestionTag {
 
     private final int id;
     private final String name;

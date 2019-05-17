@@ -34,6 +34,11 @@ public final class Join extends AbstractJoin {
         private Text keyOut;
 
         @Override
+        protected void preReduce() {
+            keyOut = null;
+        }
+
+        @Override
         protected Text computeOutputKey(Question question, QuestionTag tag) {
             if (keyOut == null)
                 keyOut = new Text(Utils.format(question.creationDate()));
@@ -43,11 +48,6 @@ public final class Join extends AbstractJoin {
         @Override
         protected Text computeOutputValue(Question question, QuestionTag tag) {
             return new Text(TagScore.format(tag.name(), question.score()));
-        }
-
-        @Override
-        protected void preReduce() {
-            keyOut = null;
         }
     }
 

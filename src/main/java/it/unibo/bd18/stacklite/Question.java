@@ -1,9 +1,8 @@
 package it.unibo.bd18.stacklite;
 
-import java.io.Serializable;
 import java.util.Date;
 
-public final class Question implements Serializable {
+public final class Question {
 
     private final int id;
     private final Date creationDate;

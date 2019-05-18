@@ -1,10 +1,12 @@
 package it.unibo.bd18.stacklite.spark
 
 import it.unibo.bd18.app.SparkApp
-import it.unibo.bd18.stacklite.C.hdfs
-import it.unibo.bd18.stacklite.{Question, QuestionTag}
+import it.unibo.bd18.stacklite.C.{hdfs, parquet}
+import it.unibo.bd18.stacklite.{Question, QuestionTag, Utils}
 import org.apache.hadoop.fs.FileSystem
 import org.apache.spark.rdd.RDD
+import org.apache.spark.sql.types.{StructField, StructType}
+import org.apache.spark.sql.{DataFrame, types}
 
 import scala.reflect.ClassTag
 

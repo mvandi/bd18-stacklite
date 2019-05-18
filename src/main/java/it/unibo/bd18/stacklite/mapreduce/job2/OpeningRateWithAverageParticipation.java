@@ -30,13 +30,13 @@ Risultato:
 -	<tag, tassoDiChiusura, partecipazioneMedia, discretizzazione>
 
  */
-public class ClosingRateWithAverageParticipation implements JobProvider {
+public class OpeningRateWithAverageParticipation implements JobProvider {
     private final Class<?> mainClass;
     private final Configuration conf;
     private final Path inputPath;
     private final Path outputPath;
 
-    public ClosingRateWithAverageParticipation(Class<?> mainClass, Configuration conf, Path inputPath, Path outputPath) {
+    public OpeningRateWithAverageParticipation(Class<?> mainClass, Configuration conf, Path inputPath, Path outputPath) {
         this.mainClass = mainClass;
         this.conf = conf;
         this.inputPath = inputPath;

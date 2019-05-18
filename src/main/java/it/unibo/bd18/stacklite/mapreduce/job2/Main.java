@@ -27,7 +27,7 @@ public final class Main extends Configured implements Tool {
             try {
                 return new CompositeJob()
                         .add(new Join(mainClass, conf, questionsPath, questionTagsPath, tempPath))
-                        .add(new ClosingRateWithAverageParticipation(mainClass, conf, tempPath, resultPath))
+                        .add(new OpeningRateWithAverageParticipation(mainClass, conf, tempPath, resultPath))
                         .waitForCompletion(true) ? 0 : 1;
             } finally {
                 Utils.deleteIfExists(fs, true, tempPath);

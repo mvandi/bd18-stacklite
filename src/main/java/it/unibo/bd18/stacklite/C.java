@@ -1,5 +1,9 @@
 package it.unibo.bd18.stacklite;
 
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
+
+import java.io.IOException;
 import java.util.Date;
 
 public final class C {
@@ -44,12 +48,12 @@ public final class C {
     }
 
     public static final class hdfs {
-        private static final String basePath = "/user/mvandi/stacklite";
+        public static final String basePath = "/user/mvandi/stacklite";
 
         public static final class data {
             private static final String basePath = hdfs.basePath + "/data";
 
-            public static final String questions = basePath + "/questionCount.csv";
+            public static final String questions = basePath + "/questions.csv";
 
             public static final String questionTags = basePath + "/question_tags.csv";
 
@@ -61,11 +65,14 @@ public final class C {
         }
     }
 
+    private C() {
+    }
+
     public static final class parquet {
         public static final String basePath = hdfs.basePath + "/parquet-tables";
 
         public static final class tables {
-            public static final String questions = "questionCount";
+            public static final String questions = "questions";
 
             public static final String questionTags = "question_tags";
 
@@ -77,11 +84,20 @@ public final class C {
             return parquet.basePath + "/" + tableName;
         }
 
+        public static boolean tableExists(FileSystem fs, String tableName) throws IOException {
+            return fs.exists(new Path(basePath + "/" + tableName));
+        }
+
+        public static boolean create(FileSystem fs) throws IOException {
+            final Path parquetPath = new Path(basePath);
+            if (!fs.exists(parquetPath)) {
+                fs.create(parquetPath, false);
+            }
+            return false;
+        }
+
         private parquet() {
         }
-    }
-
-    private C() {
     }
 
 }

@@ -1,9 +1,5 @@
 package it.unibo.bd18.stacklite;
 
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
-
-import java.io.IOException;
 import java.util.Date;
 
 public final class C {
@@ -66,38 +62,6 @@ public final class C {
     }
 
     private C() {
-    }
-
-    public static final class parquet {
-        public static final String basePath = hdfs.basePath + "/parquet-tables";
-
-        public static final class tables {
-            public static final String questions = "questions";
-
-            public static final String questionTags = "question_tags";
-
-            private tables() {
-            }
-        }
-
-        public static String table(String tableName) {
-            return parquet.basePath + "/" + tableName;
-        }
-
-        public static boolean tableExists(FileSystem fs, String tableName) throws IOException {
-            return fs.exists(new Path(basePath + "/" + tableName));
-        }
-
-        public static boolean create(FileSystem fs) throws IOException {
-            final Path parquetPath = new Path(basePath);
-            if (!fs.exists(parquetPath)) {
-                fs.create(parquetPath, false);
-            }
-            return false;
-        }
-
-        private parquet() {
-        }
     }
 
 }

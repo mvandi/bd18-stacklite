@@ -99,10 +99,6 @@ public final class Utils {
         }
     }
 
-    private static boolean isNull(String s) {
-        return s == null || s.equals("NA");
-    }
-
     public static int readInt(String s) {
         return readInt(s, false);
     }
@@ -117,6 +113,10 @@ public final class Utils {
 
     public static String toString(Integer i) {
         return i == null ? "NA" : Integer.toString(i);
+    }
+
+    private static boolean isNull(String s) {
+        return s == null || s.equals("NA");
     }
 
     private static <K, V extends Comparable<? super V>> Comparator<Entry<K, V>> getComparator(final boolean ascending) {

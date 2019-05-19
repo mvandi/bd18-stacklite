@@ -38,12 +38,12 @@ private[spark] trait StackliteSQLApp extends SparkApp {
     }
 
     def load(path: String, schema: StructType, tableName: String): DataFrame = {
-      def table(name: String): String = s"$basePath/$name"
+      lazy val table = s"$basePath/$tableName"
 
-      def tableExists: Boolean = fs.exists(new Path(table(tableName)))
+      def tableExists: Boolean = fs.exists(new Path(table))
 
       if (tableExists) {
-        spark.read.parquet(table(tableName))
+        spark.read.parquet(table)
       } else {
         val basePath = new Path(parquet.basePath)
         if (!fs.exists(basePath))
@@ -57,7 +57,7 @@ private[spark] trait StackliteSQLApp extends SparkApp {
           .option("nullValue", "NA")
           .load(path)
 
-        df.write.parquet(table(tableName))
+        df.write.parquet(table)
 
         df
       }
@@ -65,4 +65,3 @@ private[spark] trait StackliteSQLApp extends SparkApp {
   }
 
 }
-

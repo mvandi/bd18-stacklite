@@ -2,18 +2,17 @@ package it.unibo.bd18.stacklite.spark
 
 import java.util.Date
 
+import it.unibo.bd18.stacklite.C.{dates, tuning}
 import it.unibo.bd18.stacklite.Utils
 import it.unibo.bd18.util.implicits._
 import org.apache.hadoop.fs.Path
+import org.apache.spark.{HashPartitioner, SparkConf}
 
 /**
   * Find the first five tags that received the highest sum of scores for each
   * year-month pair (tags sorted in descending order).
   */
 object Job1 extends StackliteApp {
-
-  import it.unibo.bd18.stacklite.C.{dates, tuning}
-  import org.apache.spark.{HashPartitioner, SparkConf}
 
   override protected[this] val conf: SparkConf = new SparkConf().setAppName("z")
 
@@ -36,7 +35,7 @@ object Job1 extends StackliteApp {
         .toSeq
         .sortBy(-_._2)
         .take(5)
-//        .map(_._1)
+        //        .map(_._1)
         .mkString("[", ", ", "]"))
       .sortByKey(ascending = false)
       .mapPair((x, y) => s"$x\t$y")

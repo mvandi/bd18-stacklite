@@ -6,7 +6,7 @@ import it.unibo.bd18.util.TupleWritable;
 public class MapOutputValue extends TupleWritable {
 
     public static MapOutputValue create(Question question) {
-        return new MapOutputValue(isOpen(question), 1, getAnswerCount(question));
+        return new MapOutputValue(open(question), 1, answerCount(question));
     }
 
     public static MapOutputValue create(int openQuestions, int questionCount, int totalAnswers) {
@@ -33,11 +33,11 @@ public class MapOutputValue extends TupleWritable {
         super(openQuestions, questionCount, totalAnswers);
     }
 
-    private static int isOpen(Question question) {
+    private static int open(Question question) {
         return question.closedDate() == null ? 1 : 0;
     }
 
-    private static int getAnswerCount(Question question) {
+    private static int answerCount(Question question) {
         final Integer answerCount = question.answerCount();
         return answerCount == null ? 0 : answerCount;
     }

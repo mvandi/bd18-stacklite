@@ -3,7 +3,7 @@ package it.unibo.bd18.stacklite.mapreduce.job2;
 import it.unibo.bd18.stacklite.Question;
 import it.unibo.bd18.util.TupleWritable;
 
-public class MapOutputValue extends TupleWritable {
+public final class MapOutputValue extends TupleWritable {
 
     public static MapOutputValue create(Question question) {
         return new MapOutputValue(open(question), 1, answerCount(question));

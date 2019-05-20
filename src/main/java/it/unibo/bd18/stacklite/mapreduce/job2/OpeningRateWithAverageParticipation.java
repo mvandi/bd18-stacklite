@@ -30,7 +30,7 @@ Risultato:
 -	<tag, tassoDiChiusura, partecipazioneMedia, discretizzazione>
 
  */
-public class OpeningRateWithAverageParticipation implements JobProvider {
+public final class OpeningRateWithAverageParticipation implements JobProvider {
     private final Class<?> mainClass;
     private final Configuration conf;
     private final Path inputPath;
@@ -75,14 +75,14 @@ public class OpeningRateWithAverageParticipation implements JobProvider {
     public static final class Combiner extends Reducer<Text, MapOutputValue, Text, MapOutputValue> {
         @Override
         protected void reduce(Text key, Iterable<MapOutputValue> values, Context context) throws IOException, InterruptedException {
-            context.write(key, aggregate(values));
+            context.write(key, sum(values));
         }
     }
 
     public static final class Finisher extends Reducer<Text, MapOutputValue, Text, Text> {
         @Override
         protected void reduce(Text key, Iterable<MapOutputValue> values, Context context) throws IOException, InterruptedException {
-            final MapOutputValue value = aggregate(values);
+            final MapOutputValue value = sum(values);
 
             final int openQuestions = value.openQuestions();
             final double questionCount = value.questionCount();
@@ -95,7 +95,7 @@ public class OpeningRateWithAverageParticipation implements JobProvider {
         }
     }
 
-    private static MapOutputValue aggregate(Iterable<? extends MapOutputValue> values) {
+    private static MapOutputValue sum(Iterable<? extends MapOutputValue> values) {
         int openQuestions = 0;
         int questionCount = 0;
         int totalAnswers = 0;

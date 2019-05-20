@@ -12,13 +12,13 @@ usage() {
 isset() {
     name=$1
     if [ -z ${!name+x} ]; then
-        return 1  variable does not exist
+        return 1 #variable does not exist
     else
         return 0
     fi
 }
 
-while [[ $ -gt 0 ]]; do
+while [[ $# -gt 0 ]]; do
     case $1 in
         --mapreduce)
             if isset SPARK; then
@@ -26,7 +26,7 @@ while [[ $ -gt 0 ]]; do
             fi
             MAPREDUCE=1
             JOBTYPE=mapreduce
-            shift  past argument
+            shift #past argument
             ;;
         --spark)
             if isset MAPREDUCE; then
@@ -34,10 +34,10 @@ while [[ $ -gt 0 ]]; do
             fi
             SPARK=1
             JOBTYPE=spark
-            shift  past argument
+            shift #past argument
             ;;
         --job)
-            shift  past argument
+            shift #past argument
             JOB_N=$1
             shift
             ;;

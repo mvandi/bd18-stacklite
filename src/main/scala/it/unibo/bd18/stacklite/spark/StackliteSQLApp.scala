@@ -12,7 +12,7 @@ private[spark] trait StackliteSQLApp extends SparkApp {
   protected[this] final lazy val questionsDF = parquet.load(hdfs.data.questions, StructType(
     Seq(
       StructField("id", IntegerType, nullable = false),
-      StructField("creationDate", DateType, nullable = false),
+      StructField("creationDate", TimestampType, nullable = false),
       StructField("closedDate", DateType, nullable = true),
       StructField("deletionDate", DateType, nullable = true),
       StructField("score", IntegerType, nullable = false),
@@ -38,29 +38,30 @@ private[spark] trait StackliteSQLApp extends SparkApp {
     }
 
     def load(path: String, schema: StructType, tableName: String): DataFrame = {
-      lazy val table = s"$basePath/$tableName"
+      lazy val tablePath = s"${parquet.basePath}/$tableName"
 
-      def tableExists: Boolean = fs.exists(new Path(table))
+      def tableExists = fs.exists(new Path(tablePath))
 
-      if (tableExists) {
-        spark.read.parquet(table)
-      } else {
-        val basePath = new Path(parquet.basePath)
-        if (!fs.exists(basePath))
-          fs.create(basePath, false)
-
-        val df = spark.read
-          .format("csv")
+      if (tableExists)
+        return spark.read
           .schema(schema)
-          .option("header", "true")
-          .option("timestampFormat", Utils.dateFormat)
-          .option("nullValue", "NA")
-          .load(path)
+          .parquet(tablePath)
 
-        df.write.parquet(table)
+      val basePath = new Path(parquet.basePath)
+      if (!fs.exists(basePath))
+        fs.mkdirs(basePath)
 
-        df
-      }
+      val df = spark.read
+        .format("csv")
+        .schema(schema)
+        .option("header", "true")
+        .option("timestampFormat", Utils.dateFormat)
+        .option("nullValue", "NA")
+        .load(path)
+
+      df.write.parquet(tablePath)
+
+      df
     }
   }
 

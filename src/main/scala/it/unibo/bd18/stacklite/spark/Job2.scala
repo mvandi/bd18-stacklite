@@ -35,7 +35,7 @@ object Job2 extends StackliteSQLApp {
       $"openQuestions",
       $"questionCount",
       $"totalAnswers",
-      ($"openQuestions" / $"questionCount") as "openingRate",
+      ($"openQuestions" / $"questionCount") * 100 as "openingRate",
       ($"totalAnswers" / $"questionCount") as "averageParticipation")
     .write.parquet(resultPath)
 

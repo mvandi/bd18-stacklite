@@ -13,8 +13,8 @@ private[spark] trait StackliteSQLApp extends SparkApp {
     Seq(
       StructField("id", IntegerType, nullable = false),
       StructField("creationDate", TimestampType, nullable = false),
-      StructField("closedDate", DateType, nullable = true),
-      StructField("deletionDate", DateType, nullable = true),
+      StructField("closedDate", TimestampType, nullable = true),
+      StructField("deletionDate", TimestampType, nullable = true),
       StructField("score", IntegerType, nullable = false),
       StructField("ownerUserId", IntegerType, nullable = true),
       StructField("answerCount", IntegerType, nullable = true)
@@ -38,7 +38,7 @@ private[spark] trait StackliteSQLApp extends SparkApp {
     }
 
     def load(path: String, schema: StructType, tableName: String): DataFrame = {
-      lazy val tablePath = s"${parquet.basePath}/$tableName"
+      val tablePath = s"${parquet.basePath}/$tableName"
 
       def tableExists = fs.exists(new Path(tablePath))
 

@@ -6,7 +6,7 @@ usage() {
     echo -e "\t--mapreduce\trun job using Apache Hadoop MapReduce" >&2
     echo -e "\t--spark\t\trun job using Apache Spark" >&2
     echo -e "\t--job <number>\tnumber of the job to run" >&2
-    echo -e "\t--no-save \t\tdon't save results in local directory" >&2
+    echo -e "\t--no-save\tdon't save results in local directory" >&2
     exit 1
 }
 

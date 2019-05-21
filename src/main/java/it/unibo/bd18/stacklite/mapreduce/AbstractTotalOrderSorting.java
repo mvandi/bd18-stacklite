@@ -3,6 +3,7 @@ package it.unibo.bd18.stacklite.mapreduce;
 import it.unibo.bd18.util.JobProvider;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.RawComparator;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.Mapper;
@@ -13,9 +14,7 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.partition.InputSampler;
 import org.apache.hadoop.mapreduce.lib.partition.TotalOrderPartitioner;
 
-import java.io.IOException;
-
-public class TotalOrderSorting implements JobProvider {
+public abstract class AbstractTotalOrderSorting implements JobProvider {
 
     private final Class<?> mainClass;
     private final Configuration conf;
@@ -23,7 +22,7 @@ public class TotalOrderSorting implements JobProvider {
     private final Path partitionFile;
     private final Path outputPath;
 
-    public TotalOrderSorting(Class<?> mainClass, Configuration conf, Path inputPath, Path partitionFile, Path outputPath) {
+    public AbstractTotalOrderSorting(Class<?> mainClass, Configuration conf, Path inputPath, Path partitionFile, Path outputPath) {
         this.mainClass = mainClass;
         this.conf = conf;
         this.inputPath = inputPath;
@@ -32,7 +31,7 @@ public class TotalOrderSorting implements JobProvider {
     }
 
     @Override
-    public Job get() throws IOException, ClassNotFoundException, InterruptedException {
+    public final Job get() throws Exception {
         final Job job = Job.getInstance(conf);
 
         job.setJarByClass(mainClass);
@@ -46,11 +45,16 @@ public class TotalOrderSorting implements JobProvider {
 
         job.setReducerClass(Reducer.class);
 
-        TotalOrderPartitioner.setPartitionFile(conf, partitionFile);
-        InputSampler.Sampler<Text, Text> inputSampler = new InputSampler.RandomSampler<>(.01, 1000, 100);
+        TotalOrderPartitioner.setPartitionFile(job.getConfiguration(), partitionFile);
+        final InputSampler.Sampler<Text, Text> inputSampler = new InputSampler.RandomSampler<>(0.01, 1000, 100);
         InputSampler.writePartitionFile(job, inputSampler);
         job.setPartitionerClass(TotalOrderPartitioner.class);
 
+        job.setSortComparatorClass(getComparatorClass());
+
         return job;
     }
+
+    protected abstract Class<? extends RawComparator> getComparatorClass();
+
 }

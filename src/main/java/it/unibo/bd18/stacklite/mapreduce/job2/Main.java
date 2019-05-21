@@ -1,7 +1,6 @@
 package it.unibo.bd18.stacklite.mapreduce.job2;
 
 import it.unibo.bd18.stacklite.Utils;
-import it.unibo.bd18.stacklite.mapreduce.TotalOrderSorting;
 import it.unibo.bd18.util.CompositeJob;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;

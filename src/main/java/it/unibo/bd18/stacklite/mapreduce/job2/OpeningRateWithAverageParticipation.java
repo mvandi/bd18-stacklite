@@ -44,7 +44,7 @@ public final class OpeningRateWithAverageParticipation implements JobProvider {
     }
 
     @Override
-    public Job get() throws IOException {
+    public Job get() throws Exception {
         final Job job = Job.getInstance(conf);
 
         job.setJarByClass(mainClass);
@@ -58,8 +58,6 @@ public final class OpeningRateWithAverageParticipation implements JobProvider {
 
         job.setCombinerClass(Combiner.class);
         job.setReducerClass(Finisher.class);
-
-        job.setSortComparatorClass(Text.Comparator.class);
 
         return job;
     }

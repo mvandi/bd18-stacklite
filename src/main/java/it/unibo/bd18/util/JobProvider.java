@@ -6,6 +6,6 @@ import java.io.IOException;
 
 public interface JobProvider {
 
-    Job get() throws IOException, ClassNotFoundException, InterruptedException;
+    Job get() throws Exception;
 
 }

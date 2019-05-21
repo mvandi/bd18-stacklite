@@ -38,7 +38,7 @@ public abstract class AbstractJoin implements JobProvider {
     }
 
     @Override
-    public final Job get() throws IOException {
+    public final Job get() throws Exception {
         final Job job = Job.getInstance(conf);
 
         job.setJarByClass(mainClass);

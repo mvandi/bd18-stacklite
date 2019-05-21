@@ -3,8 +3,8 @@ package it.unibo.bd18.stacklite.mapreduce.job2;
 import it.unibo.bd18.stacklite.mapreduce.AbstractTotalOrderSorting;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.RawComparator;
-import org.apache.hadoop.io.Text;
+
+import static org.apache.hadoop.io.Text.Comparator;
 
 public final class TotalOrderSorting extends AbstractTotalOrderSorting {
 
@@ -13,8 +13,8 @@ public final class TotalOrderSorting extends AbstractTotalOrderSorting {
     }
 
     @Override
-    protected Class<? extends RawComparator> getComparatorClass() {
-        return Text.Comparator.class;
+    protected Class<Comparator> getComparatorClass() {
+        return Comparator.class;
     }
 
 }

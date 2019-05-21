@@ -15,7 +15,7 @@ public final class TotalOrderSorting extends AbstractTotalOrderSorting {
     }
 
     @Override
-    protected Class<? extends RawComparator> getComparatorClass() {
+    protected Class<Comparator> getComparatorClass() {
         return Comparator.class;
     }
 

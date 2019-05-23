@@ -1,27 +1,27 @@
 package it.unibo.bd18.stacklite.spark
 
-import it.unibo.bd18.stacklite.C
-import org.apache.spark.SparkConf
-import org.apache.spark.sql.functions._ // for `when`
-
 object Job2 extends StackliteSQLApp {
 
-  override protected[this] val conf: SparkConf = new SparkConf().setAppName("Job2")
+  import it.unibo.bd18.stacklite.C.dates
+  import it.unibo.bd18.stacklite.Utils
+  import org.apache.hadoop.fs.Path
+  import org.apache.spark.sql.functions.{count, sum, when}
+  import spark.implicits._
 
-  import spark.implicits._ // $""
+  val resultPath = args(0)
+  Utils.deleteIfExists(fs, true, new Path(resultPath))
 
   val resultDF = questionsDF
-    .where($"creationDate" between(C.dates.startDate, C.dates.endDate) and ($"closingDate" isNull))
+    .where($"creationDate" between(Utils.toString(dates.startDate), Utils.toString(dates.endDate)) and ($"deletionDate" isNull))
     .join(questionTagsDF, "id")
     .withColumn("openQuestions", when($"closedDate".isNull, 1) otherwise 0)
     .groupBy("name")
     .agg(count("*") as "questionCount",
       sum("answerCount") as "totalAnswers",
-      sum("openQuestions"))
+      sum("openQuestions") as "openQuestions")
     .orderBy("name")
     .select($"name", $"openQuestions", $"questionCount", $"totalAnswers",
       ($"openQuestions" / $"questionCount") * 100 as "openingRate",
       $"totalAnswers" / $"questionCount" as "averageParticipation")
-    .show(10)
-
+    .write.parquet(resultPath)
 }

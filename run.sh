@@ -57,13 +57,13 @@ if ! isset RESULT_PATH; then
     usage
 fi
 
-if isset JOBTYPE; then
-    RESULT_PATH=$RESULT_PATH/$JOBTYPE
-else
+if ! isset JOB_N; then
     usage
 fi
 
-if ! isset JOB_N; then
+if isset JOBTYPE; then
+    RESULT_PATH=$RESULT_PATH/${JOBTYPE}$JOB_N
+else
     usage
 fi
 

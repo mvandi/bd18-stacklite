@@ -14,6 +14,8 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 
 import java.io.IOException;
 
+import static org.apache.hadoop.io.Text.Comparator;
+
 /*
 File in entrata: <tag, domanda>
 -	Count tutte le domande
@@ -58,6 +60,8 @@ public final class OpeningRateWithAverageParticipation implements JobProvider {
 
         job.setCombinerClass(Combiner.class);
         job.setReducerClass(Finisher.class);
+
+        job.setSortComparatorClass(Comparator.class);
 
         return job;
     }

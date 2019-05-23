@@ -19,8 +19,8 @@ public final class Main extends Configured implements Tool {
         final Path questionTagsPath = new Path(hdfs.data.questionTags);
         final String resultPathStr = args[0];
         final Path tempPath = new Path(resultPathStr + "-temp");
-        final Path unsortedPath = new Path(resultPathStr + "-unsorted");
-        final Path partitionFile = new Path(resultPathStr + "-partition.lst");
+        //final Path unsortedPath = new Path(resultPathStr + "-unsorted");
+        //final Path partitionFile = new Path(resultPathStr + "-partition.lst");
         final Path resultPath = new Path(resultPathStr);
 
         final Configuration conf = getConf();
@@ -28,14 +28,17 @@ public final class Main extends Configured implements Tool {
 
         try (final FileSystem fs = FileSystem.get(conf)) {
             Utils.deleteIfExists(fs, true, resultPath);
+
+            //fs.create(partitionFile, true);
             try {
                 return new CompositeJob()
                         .add(new Join(mainClass, conf, questionsPath, questionTagsPath, tempPath))
-                        .add(new OpeningRateWithAverageParticipation(mainClass, conf, tempPath, unsortedPath))
-                        .add(new TotalOrderSorting(mainClass, conf, unsortedPath, partitionFile, resultPath))
+                        .add(new OpeningRateWithAverageParticipation(mainClass, conf, tempPath, resultPath))
+                        //.add(new OpeningRateWithAverageParticipation(mainClass, conf, tempPath, unsortedPath))
+                        //.add(new TotalOrderSorting(mainClass, conf, unsortedPath, partitionFile, resultPath))
                         .waitForCompletion(true) ? 0 : 1;
             } finally {
-                Utils.deleteIfExists(fs, true, tempPath, unsortedPath, partitionFile);
+                Utils.deleteIfExists(fs, true, tempPath/*, unsortedPath, partitionFile*/);
             }
         }
     }

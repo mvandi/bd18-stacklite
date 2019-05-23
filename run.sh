@@ -6,6 +6,7 @@ usage() {
     echo -e "\t--mapreduce\trun job using Apache Hadoop MapReduce" >&2
     echo -e "\t--spark\t\trun job using Apache Spark" >&2
     echo -e "\t--job <number>\tnumber of the job to run" >&2
+    echo -e "\t--no-save \t\tdon't save results in local directory" >&2
     exit 1
 }
 
@@ -41,6 +42,10 @@ while [[ $# -gt 0 ]]; do
             JOB_N=$1
             shift
             ;;
+        --no-save)
+            NO_SAVE=1
+            shift #past argument
+            ;;
         *)
             RESULT_PATH=$1
             shift
@@ -73,8 +78,10 @@ else
 fi
 
 if [ "$?" == "0" ]; then
-    RESULT_FILE=results${JOB_N}-${JOBTYPE}.txt
-    hdfs dfs -cat $RESULT_PATH/* > $RESULT_FILE
-    hdfs dfs -rm -r -skipTrash $RESULT_PATH
-    echo "Output written to `pwd`/$RESULT_FILE"
+    if ! isset NO_SAVE; then
+        RESULT_FILE=results${JOB_N}-${JOBTYPE}.txt
+        hdfs dfs -cat $RESULT_PATH/* > $RESULT_FILE
+        hdfs dfs -rm -r -skipTrash $RESULT_PATH
+        echo "Output written to `pwd`/$RESULT_FILE"
+    fi
 fi

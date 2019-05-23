@@ -8,6 +8,7 @@ object Job2 extends StackliteSQLApp {
   import org.apache.spark.sql.functions.{count, sum, when}
   import spark.implicits._
 
+
   val resultPath = args(0)
   Utils.deleteIfExists(fs, true, new Path(resultPath))
 
@@ -24,4 +25,5 @@ object Job2 extends StackliteSQLApp {
       ($"openQuestions" / $"questionCount") * 100 as "openingRate",
       $"totalAnswers" / $"questionCount" as "averageParticipation")
     .write.parquet(resultPath)
+
 }

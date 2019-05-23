@@ -14,6 +14,8 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 
 import java.io.IOException;
 
+import static org.apache.hadoop.io.Text.Comparator;
+
 /*
 File in entrata: <tag, domanda>
 -	Count tutte le domande
@@ -44,7 +46,7 @@ public final class OpeningRateWithAverageParticipation implements JobProvider {
     }
 
     @Override
-    public Job get() throws IOException {
+    public Job get() throws Exception {
         final Job job = Job.getInstance(conf);
 
         job.setJarByClass(mainClass);
@@ -59,7 +61,7 @@ public final class OpeningRateWithAverageParticipation implements JobProvider {
         job.setCombinerClass(Combiner.class);
         job.setReducerClass(Finisher.class);
 
-        job.setSortComparatorClass(Text.Comparator.class);
+        job.setSortComparatorClass(Comparator.class);
 
         return job;
     }
@@ -91,7 +93,12 @@ public final class OpeningRateWithAverageParticipation implements JobProvider {
             final double openingRate = openQuestions / questionCount;
             final double averageParticipation = totalAnswers / questionCount;
 
-            context.write(key, new Text(String.format("(%d,%d,%d,%.2f%%,%.2f)", openQuestions, (int) questionCount, totalAnswers, openingRate * 100, averageParticipation)));
+            context.write(key, new Text(String.format("(%d,%d,%d,%.2f%%,%.2f)",
+                    openQuestions,
+                    (int) questionCount,
+                    totalAnswers,
+                    openingRate * 100,
+                    averageParticipation)));
         }
     }
 
@@ -100,10 +107,10 @@ public final class OpeningRateWithAverageParticipation implements JobProvider {
         int questionCount = 0;
         int totalAnswers = 0;
 
-        for (MapOutputValue val : values) {
-            openQuestions += val.openQuestions();
-            questionCount += val.questionCount();
-            totalAnswers += val.totalAnswers();
+        for (final MapOutputValue value : values) {
+            openQuestions += value.openQuestions();
+            questionCount += value.questionCount();
+            totalAnswers += value.totalAnswers();
         }
 
         return MapOutputValue.create(openQuestions, questionCount, totalAnswers);

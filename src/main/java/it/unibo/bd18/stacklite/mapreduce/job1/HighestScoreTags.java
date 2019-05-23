@@ -36,7 +36,7 @@ public final class HighestScoreTags implements JobProvider {
     }
 
     @Override
-    public Job get() throws IOException {
+    public Job get() throws Exception {
         final Job job = Job.getInstance(conf);
 
         job.setJarByClass(mainClass);
@@ -88,20 +88,6 @@ public final class HighestScoreTags implements JobProvider {
         }
     }
 
-    public static final class Comparator extends WritableComparator {
-        protected Comparator() {
-            super(Text.class);
-        }
-
-        @Override
-        public int compare(WritableComparable c1, WritableComparable c2) {
-            final ReduceOutputKey a = ReduceOutputKey.create((Text) c1);
-            final ReduceOutputKey b = ReduceOutputKey.create((Text) c2);
-
-            return a.compareTo(b);
-        }
-    }
-
     private static Map<String, Integer> sumScoresByTag(Iterable<? extends MapOutputValue> values) {
         final Map<String, Integer> tags = new HashMap<>();
         for (final MapOutputValue value : values) {
@@ -115,6 +101,20 @@ public final class HighestScoreTags implements JobProvider {
             }
         }
         return tags;
+    }
+
+    public static final class Comparator extends WritableComparator {
+        protected Comparator() {
+            super(Text.class);
+        }
+
+        @Override
+        public int compare(WritableComparable c1, WritableComparable c2) {
+            final ReduceOutputKey a = ReduceOutputKey.create((Text) c1);
+            final ReduceOutputKey b = ReduceOutputKey.create((Text) c2);
+
+            return a.compareTo(b);
+        }
     }
 
 }

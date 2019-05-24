@@ -2,6 +2,7 @@ package it.unibo.bd18.stacklite.mapreduce.job2;
 
 import it.unibo.bd18.stacklite.Utils;
 import it.unibo.bd18.util.CompositeJob;
+import org.apache.commons.lang.mutable.MutableInt;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.FileSystem;
@@ -19,6 +20,7 @@ public final class Main extends Configured implements Tool {
         final Path questionTagsPath = new Path(hdfs.data.questionTags);
         final String resultPathStr = args[0];
         final Path tempPath = new Path(resultPathStr + "-temp");
+        final Path temp2Path = new Path(resultPathStr + "-temp2");
         //final Path unsortedPath = new Path(resultPathStr + "-unsorted");
         //final Path partitionFile = new Path(resultPathStr + "-partition.lst");
         final Path resultPath = new Path(resultPathStr);
@@ -28,17 +30,20 @@ public final class Main extends Configured implements Tool {
 
         try (final FileSystem fs = FileSystem.get(conf)) {
             Utils.deleteIfExists(fs, true, resultPath);
-
+            MutableInt min = new MutableInt();
+            MutableInt max = new MutableInt();
             //fs.create(partitionFile, true);
             try {
                 return new CompositeJob()
                         .add(new Join(mainClass, conf, questionsPath, questionTagsPath, tempPath))
-                        .add(new OpeningRateWithAverageParticipation(mainClass, conf, tempPath, resultPath))
+                        .add(new TotalAnswersByTag(mainClass, conf, tempPath, temp2Path))
+                        .add(new MinMax(mainClass, conf, temp2Path, min, max))
+                        .add(new OpeningRateWithAverageParticipation(mainClass, conf, tempPath, min, max, resultPath))
                         //.add(new OpeningRateWithAverageParticipation(mainClass, conf, tempPath, unsortedPath))
                         //.add(new TotalOrderSorting(mainClass, conf, unsortedPath, partitionFile, resultPath))
                         .waitForCompletion(true) ? 0 : 1;
             } finally {
-                Utils.deleteIfExists(fs, true, tempPath/*, unsortedPath, partitionFile*/);
+                Utils.deleteIfExists(fs, true, tempPath, temp2Path/*, unsortedPath, partitionFile*/);
             }
         }
     }

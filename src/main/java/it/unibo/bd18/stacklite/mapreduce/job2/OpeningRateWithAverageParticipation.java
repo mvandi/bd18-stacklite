@@ -2,6 +2,7 @@ package it.unibo.bd18.stacklite.mapreduce.job2;
 
 import it.unibo.bd18.stacklite.Question;
 import it.unibo.bd18.util.JobProvider;
+import org.apache.commons.lang.mutable.MutableInt;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
@@ -38,7 +39,7 @@ public final class OpeningRateWithAverageParticipation implements JobProvider {
     private final Path inputPath;
     private final Path outputPath;
 
-    public OpeningRateWithAverageParticipation(Class<?> mainClass, Configuration conf, Path inputPath, Path outputPath) {
+    public OpeningRateWithAverageParticipation(Class<?> mainClass, Configuration conf, Path inputPath, MutableInt min, MutableInt max, Path outputPath) {
         this.mainClass = mainClass;
         this.conf = conf;
         this.inputPath = inputPath;

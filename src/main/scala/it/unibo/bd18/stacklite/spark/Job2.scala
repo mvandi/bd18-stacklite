@@ -1,8 +1,13 @@
 package it.unibo.bd18.stacklite.spark
 
+import org.apache.spark.SparkConf
+
 object Job2 extends StackliteSQLApp {
 
+  override protected[this] val conf: SparkConf = new SparkConf().setAppName("Job2")
+
   import java.util.Date
+
   import it.unibo.bd18.stacklite.C.dates
   import it.unibo.bd18.stacklite.Utils
   import org.apache.hadoop.fs.Path
@@ -19,7 +24,7 @@ object Job2 extends StackliteSQLApp {
     .where(($"creationDate" between(d(dates.startDate), d(dates.endDate)))
         && ($"deletionDate" isNull))
     .join(questionTagsDF, "id")
-    .withColumn("openQuestions", when($"closedDate".isNull, 1) otherwise 0)
+    .withColumn("open", when($"closedDate" isNull, 1) otherwise 0)
     .groupBy("name")
     .agg(
       sum("open") as "openQuestions",
@@ -43,8 +48,6 @@ object Job2 extends StackliteSQLApp {
   //resultDF.explain(extended = true)
 
   private[this] def discretize(x: Column, min: Column, max: Column): Column = {
-    val lowThreshold = 1.0 / 3.0
-    val highThreshold = 2.0 / 3.0
 
     val normalized = (x - min) / (max - min)
 
@@ -52,5 +55,8 @@ object Job2 extends StackliteSQLApp {
       .when(normalized > highThreshold, "HIGH")
       .otherwise("MEDIUM")
   }
+
+  private val lowThreshold = 1.0 / 3.0
+  private val highThreshold = 2.0 / 3.0
 
 }

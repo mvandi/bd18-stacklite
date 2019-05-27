@@ -2,6 +2,8 @@ package it.unibo.bd18.stacklite.spark
 
 import org.apache.spark.SparkConf
 
+import scala.language.postfixOps
+
 object Job2 extends StackliteSQLApp {
 
   override protected[this] val conf: SparkConf = new SparkConf().setAppName("Job2")
@@ -33,8 +35,9 @@ object Job2 extends StackliteSQLApp {
     .cache()
 
   baseDF.crossJoin(baseDF
-    .select(min("totalAnswers") as "minParticipation",
-            max("totalAnswers") as "maxParticipation"))
+    .select(
+      min("totalAnswers") as "minParticipation",
+      max("totalAnswers") as "maxParticipation"))
     .select(
       $"name",
       $"openQuestions",
@@ -47,8 +50,7 @@ object Job2 extends StackliteSQLApp {
 
   //resultDF.explain(extended = true)
 
-  private[this] def discretize(x: Column, min: Column, max: Column): Column = {
-
+  private def discretize(x: Column, min: Column, max: Column): Column = {
     val normalized = (x - min) / (max - min)
 
     when(normalized < lowThreshold, "LOW")

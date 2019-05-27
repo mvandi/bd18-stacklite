@@ -7,7 +7,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
 
-public class Join extends AbstractJoin {
+public final class Join extends AbstractJoin {
 
     public Join(Class<?> mainClass, Configuration conf, Path questionsPath, Path questionTagsPath, Path outputPath) {
         super(mainClass, conf, questionsPath, questionTagsPath, outputPath);
@@ -36,7 +36,7 @@ public class Join extends AbstractJoin {
     public static final class QuestionMapper extends QuestionMapperBase {
         @Override
         protected boolean filter(Question question) {
-            return super.filter(question) && question.deletionDate() != null;
+            return super.filter(question) && question.deletionDate() == null;
         }
     }
 

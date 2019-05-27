@@ -4,7 +4,6 @@ import it.unibo.bd18.stacklite.Question;
 import it.unibo.bd18.stacklite.QuestionTag;
 import it.unibo.bd18.stacklite.Utils;
 import it.unibo.bd18.stacklite.mapreduce.AbstractJoin;
-import it.unibo.bd18.stacklite.mapreduce.TagScore;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
@@ -47,7 +46,7 @@ public final class Join extends AbstractJoin {
 
         @Override
         protected Text computeOutputValue(Question question, QuestionTag tag) {
-            return new Text(TagScore.format(tag.name(), question.score()));
+            return new Text(MapOutputValue.format(tag.name(), question.score()));
         }
     }
 

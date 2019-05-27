@@ -3,7 +3,6 @@ package it.unibo.bd18.util;
 import org.apache.commons.lang.Validate;
 import org.apache.hadoop.mapreduce.Job;
 
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -19,6 +18,7 @@ public final class CompositeJob {
         SUCCEEDED,
         FAILED
     }
+
     private State state;
 
     public CompositeJob() {
@@ -54,7 +54,7 @@ public final class CompositeJob {
         return state == State.SUCCEEDED;
     }
 
-    public boolean waitForCompletion(boolean verbose) throws InterruptedException, IOException, ClassNotFoundException {
+    public boolean waitForCompletion(boolean verbose) throws Exception {
         checkDefine();
 
         state = State.RUNNING;

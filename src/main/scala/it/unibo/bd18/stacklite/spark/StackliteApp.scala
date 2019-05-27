@@ -12,13 +12,11 @@ private[spark] trait StackliteApp extends SparkApp {
 
   import it.unibo.bd18.util.implicits._
 
-  protected[this] lazy final val questionsRDD = createRDD(hdfs.data.questions).map(Question.create)
+  protected[this] final lazy val questionsRDD = createRDD(hdfs.data.questions).map(Question.create)
 
-  protected[this] lazy final val questionTagsRDD = createRDD(hdfs.data.questionTags).map(QuestionTag.create)
+  protected[this] final lazy val questionTagsRDD = createRDD(hdfs.data.questionTags).map(QuestionTag.create)
 
   private[this] final def createRDD[T: ClassTag](path: String): RDD[Array[String]] = spark.readCSV(path)
     .map(_.toSeq.map(_.toString).toArray)
-
-  protected[this] lazy final val fs = FileSystem.get(sc.hadoopConfiguration)
 
 }

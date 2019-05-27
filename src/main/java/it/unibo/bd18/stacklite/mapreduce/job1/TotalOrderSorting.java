@@ -3,7 +3,6 @@ package it.unibo.bd18.stacklite.mapreduce.job1;
 import it.unibo.bd18.stacklite.mapreduce.AbstractTotalOrderSorting;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.RawComparator;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.WritableComparable;
 import org.apache.hadoop.io.WritableComparator;

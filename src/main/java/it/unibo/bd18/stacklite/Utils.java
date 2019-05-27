@@ -80,7 +80,7 @@ public final class Utils {
         }
     }
 
-    private static List<String> headers = Arrays.asList("Id,", ",CreationDate,", ",ClosedDate,", ",DeletionDate,", ",Score,", ",OwnerUserId,", ",AnswerCount", ",Tag");
+    private static final List<String> headers = Arrays.asList("Id,", ",CreationDate,", ",ClosedDate,", ",DeletionDate,", ",Score,", ",OwnerUserId,", ",AnswerCount", ",Tag");
 
     public static boolean isHeader(String row) {
         for (final String header : headers) {
@@ -121,7 +121,7 @@ public final class Utils {
 
     private static <K, V extends Comparable<? super V>> Comparator<Entry<K, V>> getComparator(final boolean ascending) {
         return new Comparator<Entry<K, V>>() {
-            private Comparator<Entry<K, V>> comparator = getComparator();
+            private final Comparator<Entry<K, V>> comparator = getComparator();
 
             private Comparator<Entry<K, V>> getComparator() {
                 final Comparator<Entry<K, V>> cmp = new Comparator<Entry<K, V>>() {

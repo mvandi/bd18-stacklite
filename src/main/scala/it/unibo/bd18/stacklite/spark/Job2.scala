@@ -1,13 +1,8 @@
 package it.unibo.bd18.stacklite.spark
 
-import org.apache.spark.SparkConf
-
 object Job2 extends StackliteSQLApp {
 
-  override protected[this] val conf: SparkConf = new SparkConf().setAppName("Job2")
-
   import java.util.Date
-
   import it.unibo.bd18.stacklite.C.dates
   import it.unibo.bd18.stacklite.Utils
   import org.apache.hadoop.fs.Path
@@ -24,7 +19,7 @@ object Job2 extends StackliteSQLApp {
     .where(($"creationDate" between(d(dates.startDate), d(dates.endDate)))
         && ($"deletionDate" isNull))
     .join(questionTagsDF, "id")
-    .withColumn("open", when($"closedDate" isNull, 1) otherwise 0)
+    .withColumn("openQuestions", when($"closedDate".isNull, 1) otherwise 0)
     .groupBy("name")
     .agg(
       sum("open") as "openQuestions",

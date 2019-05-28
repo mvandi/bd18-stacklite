@@ -29,7 +29,7 @@ public final class Main extends Configured implements Tool {
         final Class mainClass = getClass();
 
         try (final FileSystem fs = FileSystem.get(conf)) {
-            Utils.deleteIfExists(fs, true, resultPath, joinOutputPath, totalAnswersByTagOutputPath);
+            Utils.deleteIfExists(fs, true, resultPath, joinOutputPath, totalAnswersByTagOutputPath, new Path(minMaxOutputPath));
             //fs.create(partitionFile, true);
             try {
                 conf.set("minmax.properties", minMaxOutputPath);

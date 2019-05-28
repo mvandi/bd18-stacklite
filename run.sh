@@ -77,8 +77,8 @@ else
     usage
 fi
 
-if [ "$?" == "0" ]; then
-    if ! isset NO_SAVE; then
+if ! isset NO_SAVE; then
+    if [ "$?" == "0" ]; then
         RESULT_FILE=results${JOB_N}-${JOBTYPE}.txt
         hdfs dfs -cat $RESULT_PATH/* > $RESULT_FILE
         hdfs dfs -rm -r -skipTrash $RESULT_PATH

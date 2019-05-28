@@ -1,9 +1,10 @@
 package it.unibo.bd18.stacklite.mapreduce.job2;
 
-import it.unibo.bd18.stacklite.Question;
+import it.unibo.bd18.stacklite.C.job2;
 import it.unibo.bd18.util.JobProvider;
-import org.apache.commons.lang.mutable.MutableInt;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FSDataOutputStream;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.Text;
@@ -12,23 +13,22 @@ import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.hadoop.mapreduce.lib.input.KeyValueTextInputFormat;
 import org.apache.hadoop.mapreduce.lib.input.MultipleInputs;
+import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
+import org.apache.hadoop.mapreduce.lib.output.NullOutputFormat;
 
 import java.io.IOException;
+import java.util.Properties;
 
 public class MinMax implements JobProvider {
 
     private final Class<?> mainClass;
     private final Configuration conf;
     private final Path inputPath;
-    private MutableInt min;
-    private MutableInt max;
 
-    public MinMax(Class mainClass, Configuration conf, Path inputPath, MutableInt min, MutableInt max) {
+    public MinMax(Class mainClass, Configuration conf, Path inputPath) {
         this.mainClass = mainClass;
         this.conf = conf;
         this.inputPath = inputPath;
-        this.min = min;
-        this.max = max;
     }
 
     @Override
@@ -36,12 +36,13 @@ public class MinMax implements JobProvider {
         final Job job = Job.getInstance(conf);
 
         job.setJarByClass(mainClass);
-        job.setMapOutputKeyClass(Text.class);
-        job.setMapOutputValueClass(MapOutputValue.class);
-        job.setOutputKeyClass(Text.class);
+        job.setMapOutputKeyClass(IntWritable.class);
+        job.setMapOutputValueClass(MinMaxOutputValue.class);
+        job.setOutputKeyClass(IntWritable.class);
         job.setOutputValueClass(Text.class);
 
         MultipleInputs.addInputPath(job, inputPath, KeyValueTextInputFormat.class, InputMapper.class);
+        job.setOutputFormatClass(NullOutputFormat.class);
 
         job.setCombinerClass(Combiner.class);
         job.setReducerClass(Finisher.class);
@@ -49,60 +50,47 @@ public class MinMax implements JobProvider {
         return job;
     }
 
-    public static final class InputMapper extends Mapper<Text, Text, IntWritable, IntWritable> {
+    public static final class InputMapper extends Mapper<Text, Text, IntWritable, MinMaxOutputValue> {
         @Override
         protected void map(Text key, Text value, Context context) throws IOException, InterruptedException {
-            final Question question = Question.create(value);
-            context.write(new IntWritable(0), new IntWritable(MapOutputValue.create(question).totalAnswers()));
+            double averageParticipation = Double.parseDouble(value.toString());
+            context.write(new IntWritable(0), MinMaxOutputValue.create(averageParticipation, averageParticipation));
         }
     }
 
-    public final class Combiner extends Reducer<IntWritable, IntWritable, IntWritable, MinMaxOutputValue> {
+    public static final class Combiner extends Reducer<IntWritable, MinMaxOutputValue, IntWritable, MinMaxOutputValue> {
         @Override
-        protected void reduce(IntWritable key, Iterable<IntWritable> values, Context context) throws IOException, InterruptedException {
+        protected void reduce(IntWritable key, Iterable<MinMaxOutputValue> values, Context context) throws IOException, InterruptedException {
             context.write(key, minmax(values));
         }
     }
 
-    public final class Finisher extends Reducer<IntWritable, MinMaxOutputValue, IntWritable, MinMaxOutputValue> {
+    public static final class Finisher extends Reducer<IntWritable, MinMaxOutputValue, IntWritable, Text> {
         @Override
         protected void reduce(IntWritable key, Iterable<MinMaxOutputValue> values, Context context) throws IOException, InterruptedException {
-            int min = 0;
-            int max = 0;
+            final MinMaxOutputValue result = minmax(values);
 
-            for (MinMaxOutputValue value : values) {
-                min = min(value.min().intValue(), min);
-                max = max(value.max().intValue(), max);
-            }
+            final String outputPath = context.getConfiguration().get("minmax.properties");
 
-            setMinMax(min, max);
+            final Properties props = new Properties();
+            props.setProperty("min", Double.toString(result.min()));
+            props.setProperty("max", Double.toString(result.max()));
+
+            final FileSystem fs = FileSystem.get(context.getConfiguration());
+            final FSDataOutputStream os = fs.create(new Path(outputPath));
+            props.store(os, null);
         }
     }
 
-    private void setMinMax(int min, int max) {
-        this.min.setValue(min);
-        this.max.setValue(max);
-    }
+    private static MinMaxOutputValue minmax(Iterable<? extends MinMaxOutputValue> values) {
+        double min = Double.MAX_VALUE;
+        double max = Double.MIN_VALUE;
 
-    private int min(int i, int j) {
-        return (i < j) ? i : j;
-    }
-
-    private int max(int i, int j) {
-        return (i > j) ? i : j;
-    }
-
-    private MinMaxOutputValue minmax(Iterable<IntWritable> values) {
-        int min = 0;
-        int max = 0;
-
-        for (IntWritable value : values) {
-            min = min(value.get(), min);
-            max = max(value.get(), max);
+        for (MinMaxOutputValue value : values) {
+            min = Math.min(value.min(), min);
+            max = Math.max(value.max(), max);
         }
 
-        this.setMinMax(min, max);
-
-        return MinMaxOutputValue.create(this.min, this.max);
+        return MinMaxOutputValue.create(min, max);
     }
 }

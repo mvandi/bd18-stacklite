@@ -1,8 +1,11 @@
 package it.unibo.bd18.stacklite.mapreduce.job2;
 
+import it.unibo.bd18.stacklite.C.job2;
 import it.unibo.bd18.stacklite.Question;
 import it.unibo.bd18.util.JobProvider;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FSDataInputStream;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
@@ -13,6 +16,7 @@ import org.apache.hadoop.mapreduce.lib.input.MultipleInputs;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 
 import java.io.IOException;
+import java.util.Properties;
 
 import static org.apache.hadoop.io.Text.Comparator;
 
@@ -32,13 +36,15 @@ Risultato:
 -	<tag, tassoDiChiusura, partecipazioneMedia, discretizzazione>
 
  */
-public final class OpeningRateWithAverageParticipation implements JobProvider {
+public final class OpeningRateWithParticipation implements JobProvider {
+    private static final double LOW_THRESHOLD = 1.0 / 3.0;
+    private static final double HIGH_THRESHOLD = 2.0 / 3.0;
     private final Class<?> mainClass;
     private final Configuration conf;
     private final Path inputPath;
     private final Path outputPath;
 
-    public OpeningRateWithAverageParticipation(Class<?> mainClass, Configuration conf, Path inputPath, Path outputPath) {
+    public OpeningRateWithParticipation(Class<?> mainClass, Configuration conf, Path inputPath, Path outputPath) {
         this.mainClass = mainClass;
         this.conf = conf;
         this.inputPath = inputPath;
@@ -93,12 +99,28 @@ public final class OpeningRateWithAverageParticipation implements JobProvider {
             final double openingRate = openQuestions / questionCount;
             final double averageParticipation = totalAnswers / questionCount;
 
-            context.write(key, new Text(String.format("(%d,%d,%d,%.2f%%,%.2f)",
-                    openQuestions,
-                    (int) questionCount,
-                    totalAnswers,
-                    openingRate * 100,
-                    averageParticipation)));
+            final Configuration conf = context.getConfiguration();
+            final FileSystem fs = FileSystem.get(conf);
+            final String filePath = conf.get("minmax.properties");
+            final FSDataInputStream in = fs.open(new Path(filePath));
+            final Properties props = new Properties();
+
+            props.load(in);
+
+            final double min = Double.parseDouble(props.getProperty("min"));
+            final double max = Double.parseDouble(props.getProperty("max"));
+
+            final String participation = discretize(averageParticipation, min, max);
+
+            if (value.questionCount() > 1) {
+                context.write(key, new Text(String.format("(%d,%d,%d,%f,%f,%s)",
+                        openQuestions,
+                        (int) questionCount,
+                        totalAnswers,
+                        openingRate,
+                        averageParticipation,
+                        participation)));
+            }
         }
     }
 
@@ -114,6 +136,17 @@ public final class OpeningRateWithAverageParticipation implements JobProvider {
         }
 
         return MapOutputValue.create(openQuestions, questionCount, totalAnswers);
+    }
+
+    private static String discretize(double averageParticipation, double min, double max) {
+        double normalization = (averageParticipation - min) / (max - min);
+
+        if (normalization < LOW_THRESHOLD) {
+            return "LOW";
+        } else if (normalization > HIGH_THRESHOLD) {
+            return "HIGH";
+        }
+        return "MEDIUM";
     }
 
 }

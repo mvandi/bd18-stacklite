@@ -52,8 +52,6 @@ public final class HighestScoreTags implements JobProvider {
         job.setCombinerClass(Combiner.class);
         job.setReducerClass(Finisher.class);
 
-        job.setSortComparatorClass(Comparator.class);
-
         return job;
     }
 
@@ -101,20 +99,6 @@ public final class HighestScoreTags implements JobProvider {
             }
         }
         return tags;
-    }
-
-    public static final class Comparator extends WritableComparator {
-        protected Comparator() {
-            super(Text.class);
-        }
-
-        @Override
-        public int compare(WritableComparable c1, WritableComparable c2) {
-            final ReduceOutputKey a = ReduceOutputKey.create((Text) c1);
-            final ReduceOutputKey b = ReduceOutputKey.create((Text) c2);
-
-            return a.compareTo(b);
-        }
     }
 
 }

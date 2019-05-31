@@ -16,11 +16,11 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import java.io.IOException;
 
 public class AverageParticipationByTag implements JobProvider {
+
     private final Class<?> mainClass;
     private final Configuration conf;
     private final Path inputPath;
     private final Path outputPath;
-
 
     public AverageParticipationByTag(Class mainClass, Configuration conf, Path tempPath, Path outputPath) {
         this.mainClass = mainClass;
@@ -67,7 +67,7 @@ public class AverageParticipationByTag implements JobProvider {
     public static final class Finisher extends Reducer<Text, TotalAnswersOutputValue, Text, DoubleWritable> {
         @Override
         protected void reduce(Text key, Iterable<TotalAnswersOutputValue> values, Context context) throws IOException, InterruptedException {
-            TotalAnswersOutputValue value = sum(values);
+            final TotalAnswersOutputValue value = sum(values);
             if (value.questionCount() > 1) {
                 final double averageParticipation = value.totalAnswers() / (double) value.questionCount();
                 context.write(key, new DoubleWritable(averageParticipation));

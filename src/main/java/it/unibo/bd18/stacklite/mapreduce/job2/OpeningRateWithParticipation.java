@@ -37,6 +37,7 @@ Risultato:
 
  */
 public final class OpeningRateWithParticipation implements JobProvider {
+
     private static final double LOW_THRESHOLD = 1.0 / 3.0;
     private static final double HIGH_THRESHOLD = 2.0 / 3.0;
     private final Class<?> mainClass;

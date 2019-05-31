@@ -38,7 +38,7 @@ object Job1 extends StackliteApp {
         //.map(_._1)
         .mkString("[", ", ", "]"))
       .sortByKey(ascending = false)
-      .mapPair((x, y) => s"$x\t$y")
+      .mapPair(_ + "\t" + _)
   }
 
   println(s"\n${outputRDD.toDebugString}\n")

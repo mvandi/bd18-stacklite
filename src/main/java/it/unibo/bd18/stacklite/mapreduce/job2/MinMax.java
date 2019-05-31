@@ -51,10 +51,13 @@ public class MinMax implements JobProvider {
     }
 
     public static final class InputMapper extends Mapper<Text, Text, IntWritable, MinMaxOutputValue> {
+
+        private final IntWritable key = new IntWritable(0);
+
         @Override
         protected void map(Text key, Text value, Context context) throws IOException, InterruptedException {
             double averageParticipation = Double.parseDouble(value.toString());
-            context.write(new IntWritable(0), MinMaxOutputValue.create(averageParticipation, averageParticipation));
+            context.write(this.key, MinMaxOutputValue.create(averageParticipation, averageParticipation));
         }
     }
 

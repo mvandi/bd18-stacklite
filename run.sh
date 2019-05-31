@@ -79,7 +79,7 @@ fi
 
 if ! isset NO_SAVE; then
     if [ "$?" == "0" ]; then
-        RESULT_FILE=results${JOB_N}-${JOBTYPE}.txt
+        RESULT_FILE=results-${JOBTYPE}${JOB_N}.txt
         hdfs dfs -cat $RESULT_PATH/* > $RESULT_FILE
         hdfs dfs -rm -r -skipTrash $RESULT_PATH
         echo "Output written to `pwd`/$RESULT_FILE"

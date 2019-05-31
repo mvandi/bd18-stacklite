@@ -24,7 +24,7 @@ object Job2 extends StackliteSQLApp {
     .where(($"creationDate" between(d(dates.startDate), d(dates.endDate)))
       && ($"deletionDate" isNull))
     .join(questionTagsDF, "id")
-    .withColumn("openQuestions", when($"closedDate".isNull, 1) otherwise 0)
+    .withColumn("open", when($"closedDate" isNull, 1) otherwise 0)
     .groupBy("name")
     .agg(
       sum("open") as "openQuestions",

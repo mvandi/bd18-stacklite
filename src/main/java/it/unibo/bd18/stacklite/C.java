@@ -1,23 +1,14 @@
 package it.unibo.bd18.stacklite;
 
-import java.text.ParseException;
 import java.util.Date;
-
-import static it.unibo.bd18.stacklite.Utils.df;
 
 public final class C {
 
     public static final class dates {
-        public static final Date startDate;
-        public static final Date endDate;
+        public static final Date startDate = Utils.readDate("2012-01-01T00:00:00Z");
+        public static final Date endDate = Utils.readDate("2014-12-31T23:59:59Z");
 
-        static {
-            try {
-                startDate = df.parse("2012-01-01T00:00:00Z");
-                endDate = df.parse("2014-12-31T23:59:59Z");
-            } catch (final ParseException e) {
-                throw new RuntimeException(e);
-            }
+        private dates() {
         }
     }
 
@@ -52,19 +43,31 @@ public final class C {
         }
     }
 
-    public static final class hive {
-        public static final String database = "mvandi_stacklite";
+    public static final class hdfs {
+        public static final String basePath = "/user/mvandi/stacklite";
 
-        public static final class tables {
-            public static final String questions = "questions";
+        public static final class data {
+            private static final String basePath = hdfs.basePath + "/data";
 
-            public static final String questionTags = "question_tags";
+            public static final String questions = basePath + "/questions.csv";
 
-            private tables() {
+            public static final String questionTags = basePath + "/question_tags.csv";
+
+            private data() {
             }
         }
 
-        private hive() {
+        private hdfs() {
+        }
+    }
+
+    public static final class job2 {
+        private static final String PREFIX = "job2";
+
+        public static String minLabel = PREFIX + ".min";
+        public static String maxLabel = PREFIX + ".max";
+
+        private job2() {
         }
     }
 

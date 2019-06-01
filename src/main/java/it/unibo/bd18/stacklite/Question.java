@@ -1,9 +1,10 @@
 package it.unibo.bd18.stacklite;
 
-import java.io.Serializable;
+import org.apache.hadoop.io.Text;
+
 import java.util.Date;
 
-public final class Question implements Serializable {
+public final class Question {
 
     private final int id;
     private final Date creationDate;
@@ -12,6 +13,10 @@ public final class Question implements Serializable {
     private final int score;
     private final Integer ownerUserId;
     private final Integer answerCount;
+
+    public static Question create(Text row) {
+        return create(row.toString());
+    }
 
     public static Question create(String row) {
         return create(row.split("\\s*,\\s*"));

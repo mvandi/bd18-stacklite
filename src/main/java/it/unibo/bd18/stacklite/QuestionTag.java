@@ -1,11 +1,15 @@
 package it.unibo.bd18.stacklite;
 
-import java.io.Serializable;
+import org.apache.hadoop.io.Text;
 
-public final class QuestionTag implements Serializable {
+public final class QuestionTag {
 
     private final int id;
     private final String name;
+
+    public static QuestionTag create(Text row) {
+        return create(row.toString());
+    }
 
     public static QuestionTag create(String row) {
         return create(row.split("\\s*,\\s*"));

@@ -48,12 +48,6 @@ package object implicits {
       .option("header", header.toString)
       .csv(path)
       .rdd
-
-    def readCSVHeader(path: String): RDD[String] = readCSV(path, header = false)
-      .take(1)
-      .map(_.mkString(","))
-      .toSeq
-      .toRDD(spark.sparkContext)
   }
 
   implicit class RichDate(private val d: Date) {

@@ -1,8 +1,7 @@
-package it.unibo.bd18.stacklite.mapreduce.job1;
+package it.unibo.bd18.stacklite.mapreduce.job2;
 
 import it.unibo.bd18.stacklite.Question;
 import it.unibo.bd18.stacklite.QuestionTag;
-import it.unibo.bd18.stacklite.Utils;
 import it.unibo.bd18.stacklite.mapreduce.AbstractJoin;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
@@ -12,6 +11,11 @@ public final class Join extends AbstractJoin {
 
     public Join(Class<?> mainClass, Configuration conf, Path questionsPath, Path questionTagsPath, Path outputPath) {
         super(mainClass, conf, questionsPath, questionTagsPath, outputPath);
+    }
+
+    @Override
+    protected Class<QuestionMapper> getQuestionMapperClass() {
+        return QuestionMapper.class;
     }
 
     @Override
@@ -29,24 +33,31 @@ public final class Join extends AbstractJoin {
         return Text.class;
     }
 
+    public static final class QuestionMapper extends QuestionMapperBase {
+        @Override
+        protected boolean filter(Question question) {
+            return super.filter(question) && question.deletionDate() == null;
+        }
+    }
+
     public static class Joiner extends JoinerBase<Text, Text> {
-        private Text keyOut;
+        private Text valueOut;
 
         @Override
         protected void preReduce() {
-            keyOut = null;
+            valueOut = null;
         }
 
         @Override
         protected Text computeOutputKey(Question question, QuestionTag tag) {
-            if (keyOut == null)
-                keyOut = new Text(Utils.format(question.creationDate()));
-            return keyOut;
+            return new Text(tag.name());
         }
 
         @Override
         protected Text computeOutputValue(Question question, QuestionTag tag) {
-            return new Text(MapOutputValue.format(tag.name(), question.score()));
+            if (valueOut == null)
+                valueOut = new Text(question.toCSVString());
+            return valueOut;
         }
     }
 

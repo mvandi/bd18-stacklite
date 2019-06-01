@@ -6,13 +6,16 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 
 import java.io.IOException;
-import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.Map.Entry;
 
 public final class Utils {
+
+    public static final String dateFormat = "yyyy-MM-dd'T'HH:mm:ss'Z'";
+
+    private static final SimpleDateFormat df = new SimpleDateFormat(dateFormat);
 
     public static <K, V extends Comparable<? super V>> List<Pair<K, V>> sortedByValue(Map<K, V> m) {
         return sortedByValue(m, true);
@@ -49,10 +52,15 @@ public final class Utils {
         return d.compareTo(startDate) >= 0 && d.compareTo(endDate) <= 0;
     }
 
-    public static synchronized String format(Date d) {
+    public static String format(Date d) {
+        final Pair<Integer, Integer> ym = paired(d);
+        return String.format("(%d,%d)", ym.left(), ym.right());
+    }
+
+    public static synchronized Pair<Integer, Integer> paired(Date d) {
         final Calendar c = Calendar.getInstance();
         c.setTime(d);
-        return String.format("(%d,%d)", c.get(Calendar.YEAR), c.get(Calendar.MONTH) + 1);
+        return Pair.create(c.get(Calendar.YEAR), c.get(Calendar.MONTH) + 1);
     }
 
     public static void deleteIfExists(FileSystem fs, Path first, Path... more) throws IOException {
@@ -72,7 +80,7 @@ public final class Utils {
         }
     }
 
-    private static List<String> headers = Arrays.asList("Id,", ",CreationDate,", ",ClosedDate,", ",DeletionDate,", ",Score,", ",OwnerUserId,", ",AnswerCount", ",Tag");
+    private static final List<String> headers = Arrays.asList("Id,", ",CreationDate,", ",ClosedDate,", ",DeletionDate,", ",Score,", ",OwnerUserId,", ",AnswerCount", ",Tag");
 
     public static boolean isHeader(String row) {
         for (final String header : headers) {
@@ -83,11 +91,9 @@ public final class Utils {
         return false;
     }
 
-    public static DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
-
     public static synchronized Date readDate(String s) {
         try {
-            return s.equals("NA") ? null : df.parse(s);
+            return isNull(s) ? null : df.parse(s);
         } catch (ParseException e) {
             throw new RuntimeException(e);
         }
@@ -98,7 +104,7 @@ public final class Utils {
     }
 
     public static Integer readInt(String s, boolean boxed) {
-        return boxed && s.equals("NA") ? null : Integer.parseInt(s);
+        return boxed && isNull(s) ? null : Integer.parseInt(s);
     }
 
     public static synchronized String toString(Date d) {
@@ -109,9 +115,13 @@ public final class Utils {
         return i == null ? "NA" : Integer.toString(i);
     }
 
+    private static boolean isNull(String s) {
+        return s == null || s.equals("NA");
+    }
+
     private static <K, V extends Comparable<? super V>> Comparator<Entry<K, V>> getComparator(final boolean ascending) {
         return new Comparator<Entry<K, V>>() {
-            private Comparator<Entry<K, V>> comparator = getComparator();
+            private final Comparator<Entry<K, V>> comparator = getComparator();
 
             private Comparator<Entry<K, V>> getComparator() {
                 final Comparator<Entry<K, V>> cmp = new Comparator<Entry<K, V>>() {

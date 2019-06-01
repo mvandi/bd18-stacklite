@@ -2,17 +2,20 @@ package it.unibo.bd18.stacklite.spark
 
 import java.util.Date
 
+import it.unibo.bd18.stacklite.C.dates
+import it.unibo.bd18.stacklite.Utils
+import org.apache.hadoop.fs.Path
+import org.apache.spark.SparkConf
 import org.apache.spark.sql.Column
+import org.apache.spark.sql.functions._
 
 import scala.language.postfixOps
 
+
 object Job2 extends StackliteSQLApp {
 
-  import it.unibo.bd18.stacklite.C.dates
-  import it.unibo.bd18.stacklite.Utils
-  import org.apache.hadoop.fs.Path
-  import org.apache.spark.sql.Column
-  import org.apache.spark.sql.functions._
+  override protected[this] val conf: SparkConf = new SparkConf().setAppName("Job2")
+
   import spark.implicits._
 
   @inline def d(d: Date): String = Utils.toString(d)
@@ -47,6 +50,8 @@ object Job2 extends StackliteSQLApp {
       $"averageParticipation",
       discretize($"averageParticipation", $"minParticipation", $"maxParticipation") as "participation")
     .write.parquet(resultPath)
+
+  //resultDF.explain(extended = true)
 
   private def discretize(x: Column, min: Column, max: Column): Column = {
     val normalized = normalize(x, min, max)

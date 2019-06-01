@@ -37,7 +37,7 @@ public final class MapOutputValue extends TupleWritable {
         return question.closedDate() == null ? 1 : 0;
     }
 
-    private static int answerCount(Question question) {
+    static int answerCount(Question question) {
         final Integer answerCount = question.answerCount();
         return answerCount == null ? 0 : answerCount;
     }

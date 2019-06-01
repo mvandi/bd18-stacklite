@@ -52,8 +52,7 @@ public class AverageParticipationByTag implements JobProvider {
         @Override
         protected void map(Text key, Text value, Context context) throws IOException, InterruptedException {
             final Question question = Question.create(value);
-            final Integer answerCount = question.answerCount();
-            context.write(key, TotalAnswersOutputValue.create(1, answerCount == null ? 0 : answerCount));
+            context.write(key, TotalAnswersOutputValue.create(question));
         }
     }
 
@@ -68,8 +67,12 @@ public class AverageParticipationByTag implements JobProvider {
         @Override
         protected void reduce(Text key, Iterable<TotalAnswersOutputValue> values, Context context) throws IOException, InterruptedException {
             final TotalAnswersOutputValue value = sum(values);
-            if (value.questionCount() > 1) {
-                final double averageParticipation = value.totalAnswers() / (double) value.questionCount();
+
+            final int questionCount = value.questionCount();
+            final int totalAnswers = value.totalAnswers();
+
+            if (questionCount > 1) {
+                final double averageParticipation = totalAnswers / (double) questionCount;
                 context.write(key, new DoubleWritable(averageParticipation));
             }
         }

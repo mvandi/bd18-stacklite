@@ -1,9 +1,7 @@
 package it.unibo.bd18.stacklite.mapreduce.job2;
 
-import it.unibo.bd18.stacklite.C.job2;
 import it.unibo.bd18.util.JobProvider;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
@@ -13,10 +11,10 @@ import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.hadoop.mapreduce.lib.input.KeyValueTextInputFormat;
 import org.apache.hadoop.mapreduce.lib.input.MultipleInputs;
-import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.NullOutputFormat;
 
 import java.io.IOException;
+import java.io.OutputStream;
 import java.util.Properties;
 
 public class MinMax implements JobProvider {
@@ -39,7 +37,7 @@ public class MinMax implements JobProvider {
         job.setMapOutputKeyClass(IntWritable.class);
         job.setMapOutputValueClass(MinMaxOutputValue.class);
         job.setOutputKeyClass(IntWritable.class);
-        job.setOutputValueClass(Text.class);
+        job.setOutputValueClass(Object.class);
 
         MultipleInputs.addInputPath(job, inputPath, KeyValueTextInputFormat.class, InputMapper.class);
         job.setOutputFormatClass(NullOutputFormat.class);
@@ -52,12 +50,12 @@ public class MinMax implements JobProvider {
 
     public static final class InputMapper extends Mapper<Text, Text, IntWritable, MinMaxOutputValue> {
 
-        private final IntWritable key = new IntWritable(0);
+        private final IntWritable keyOut = new IntWritable(0);
 
         @Override
         protected void map(Text key, Text value, Context context) throws IOException, InterruptedException {
             double averageParticipation = Double.parseDouble(value.toString());
-            context.write(this.key, MinMaxOutputValue.create(averageParticipation, averageParticipation));
+            context.write(keyOut, MinMaxOutputValue.create(averageParticipation, averageParticipation));
         }
     }
 
@@ -68,19 +66,20 @@ public class MinMax implements JobProvider {
         }
     }
 
-    public static final class Finisher extends Reducer<IntWritable, MinMaxOutputValue, IntWritable, Text> {
+    public static final class Finisher extends Reducer<IntWritable, MinMaxOutputValue, IntWritable, Object> {
         @Override
         protected void reduce(IntWritable key, Iterable<MinMaxOutputValue> values, Context context) throws IOException, InterruptedException {
             final MinMaxOutputValue result = minmax(values);
-
-            final String outputPath = context.getConfiguration().get("minmax.properties");
 
             final Properties props = new Properties();
             props.setProperty("min", Double.toString(result.min()));
             props.setProperty("max", Double.toString(result.max()));
 
-            final FileSystem fs = FileSystem.get(context.getConfiguration());
-            final FSDataOutputStream os = fs.create(new Path(outputPath));
+            final Configuration conf = context.getConfiguration();
+            final String outputPath = conf.get("minmax.properties");
+            final FileSystem fs = FileSystem.get(conf);
+            final OutputStream os = fs.create(new Path(outputPath));
+
             props.store(os, null);
         }
     }
@@ -90,10 +89,11 @@ public class MinMax implements JobProvider {
         double max = Double.MIN_VALUE;
 
         for (MinMaxOutputValue value : values) {
-            min = Math.min(value.min(), min);
-            max = Math.max(value.max(), max);
+            min = Math.min(min, value.min());
+            max = Math.max(max, value.max());
         }
 
         return MinMaxOutputValue.create(min, max);
     }
+
 }

@@ -13,7 +13,9 @@ public class MinMaxOutputValue extends TupleWritable {
         return new MinMaxOutputValue(min, max);
     }
 
-    public static MinMaxOutputValue create(Text text) {return create(text.toString());}
+    public static MinMaxOutputValue create(Text text) {
+        return create(text.toString());
+    }
 
     public static MinMaxOutputValue create(String text) {
         final int lastComma = text.lastIndexOf(",");

@@ -1,6 +1,7 @@
 package it.unibo.bd18.stacklite.mapreduce.job2;
 
 import it.unibo.bd18.stacklite.Utils;
+import it.unibo.bd18.stacklite.mapreduce.job2.C.minmax;
 import it.unibo.bd18.util.CompositeJob;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
@@ -18,31 +19,27 @@ public final class Main extends Configured implements Tool {
         final Path questionsPath = new Path(hdfs.data.questions);
         final Path questionTagsPath = new Path(hdfs.data.questionTags);
         final String resultPathStr = args[0];
-        final Path joinOutputPath = new Path(resultPathStr + "-temp");
-        final Path totalAnswersByTagOutputPath = new Path(resultPathStr + "-temp2");
-        final String minMaxOutputPath = resultPathStr + "-minmax.properties";
-        //final Path unsortedPath = new Path(resultPathStr + "-unsorted");
-        //final Path partitionFile = new Path(resultPathStr + "-partition.lst");
+        final Path joinPath = new Path(resultPathStr + "-join");
+        final Path averageParticipationByTagPath = new Path(resultPathStr + "-temp");
+        final String minmaxPathStr = resultPathStr + "-minmax.properties";
+        final Path minmaxPath = new Path(minmaxPathStr);
         final Path resultPath = new Path(resultPathStr);
 
         final Configuration conf = getConf();
         final Class mainClass = getClass();
 
         try (final FileSystem fs = FileSystem.get(conf)) {
-            Utils.deleteIfExists(fs, true, resultPath, joinOutputPath, totalAnswersByTagOutputPath, new Path(minMaxOutputPath));
-            //fs.create(partitionFile, true);
+            Utils.deleteIfExists(fs, true, resultPath, joinPath, averageParticipationByTagPath, minmaxPath);
             try {
-                conf.set("minmax.properties", minMaxOutputPath);
+                conf.set(minmax.properties.path, minmaxPathStr);
                 return new CompositeJob()
-                        .add(new Join(mainClass, conf, questionsPath, questionTagsPath, joinOutputPath))
-                        .add(new AverageParticipationByTag(mainClass, conf, joinOutputPath, totalAnswersByTagOutputPath))
-                        .add(new MinMax(mainClass, conf, totalAnswersByTagOutputPath))
-                        .add(new OpeningRateWithParticipation(mainClass, conf, joinOutputPath, resultPath))
-                        //.add(new OpeningRateWithParticipation(mainClass, conf, joinOutputPath, unsortedPath))
-                        //.add(new TotalOrderSorting(mainClass, conf, unsortedPath, partitionFile, resultPath))
+                        .add(new Join(mainClass, conf, questionsPath, questionTagsPath, joinPath))
+                        .add(new AverageParticipationByTag(mainClass, conf, joinPath, averageParticipationByTagPath))
+                        .add(new MinMax(mainClass, conf, averageParticipationByTagPath))
+                        .add(new OpeningRateWithParticipation(mainClass, conf, joinPath, resultPath))
                         .waitForCompletion(true) ? 0 : 1;
             } finally {
-                Utils.deleteIfExists(fs, true, joinOutputPath, totalAnswersByTagOutputPath/*, unsortedPath, partitionFile*/);
+                Utils.deleteIfExists(fs, true, joinPath, averageParticipationByTagPath, minmaxPath);
             }
         }
     }

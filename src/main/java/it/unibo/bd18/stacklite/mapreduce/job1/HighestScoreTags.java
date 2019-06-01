@@ -32,7 +32,7 @@ public final class HighestScoreTags implements JobProvider {
         this.inputPath = inputPath;
         this.outputPath = outputPath;
     }
-w
+
     @Override
     public Job get() throws Exception {
         final Job job = Job.getInstance(conf);
@@ -72,15 +72,11 @@ w
     }
 
     public static final class Finisher extends Reducer<Text, MapOutputValue, Text, Text> {
-        private final Text valueOut = new Text();
-
         @Override
         protected void reduce(Text key, Iterable<MapOutputValue> values, Context context) throws IOException, InterruptedException {
             final Map<String, Integer> tags = sumScoresByTag(values);
-//            final List<String> result = Utils.sortedKeysByValue(tags, false).subList(0, 5);
             List<Pair<String, Integer>> result = Utils.sortedByValue(tags, false).subList(0, 5);
-            valueOut.set(result.toString());
-            context.write(key, valueOut);
+            context.write(key, new Text(result.toString()));
         }
     }
 

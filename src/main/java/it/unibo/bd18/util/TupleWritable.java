@@ -2,6 +2,7 @@ package it.unibo.bd18.util;
 
 import org.apache.commons.lang.ClassUtils;
 import org.apache.hadoop.io.ArrayWritable;
+import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.ObjectWritable;
 import org.apache.hadoop.io.Writable;
 
@@ -29,12 +30,12 @@ public abstract class TupleWritable implements Writable {
     }
 
     @Override
-    public void write(DataOutput out) throws IOException {
+    public final void write(DataOutput out) throws IOException {
         delegate.write(out);
     }
 
     @Override
-    public void readFields(DataInput in) throws IOException {
+    public final void readFields(DataInput in) throws IOException {
         delegate.readFields(in);
     }
 
@@ -51,7 +52,7 @@ public abstract class TupleWritable implements Writable {
 
     private static ObjectWritable wrap(Object value) {
         if (value == null)
-            return new ObjectWritable();
+            return new ObjectWritable(NullWritable.get());
 
         final Class<?> primitiveClass = ClassUtils.wrapperToPrimitive(value.getClass());
         return primitiveClass != null

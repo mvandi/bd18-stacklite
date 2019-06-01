@@ -64,6 +64,6 @@ object Job2 extends StackliteSQLApp {
       .otherwise("MEDIUM")
   }
 
-  private def normalize(x: Column, min: Column, max: Column) = (x - min) / (max - min)
+  private def normalize(x: Column, min: Column, max: Column): Column = (x - min) / (max - min)
 
 }

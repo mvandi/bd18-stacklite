@@ -61,16 +61,6 @@ public final class C {
         }
     }
 
-    public static final class job2 {
-        private static final String PREFIX = "job2";
-
-        public static String minLabel = PREFIX + ".min";
-        public static String maxLabel = PREFIX + ".max";
-
-        private job2() {
-        }
-    }
-
     private C() {
     }
 

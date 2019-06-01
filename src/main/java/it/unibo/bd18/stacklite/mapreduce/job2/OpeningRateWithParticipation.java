@@ -1,7 +1,9 @@
 package it.unibo.bd18.stacklite.mapreduce.job2;
 
 import it.unibo.bd18.stacklite.Question;
+import it.unibo.bd18.stacklite.mapreduce.job2.C.minmax;
 import it.unibo.bd18.util.JobProvider;
+import it.unibo.bd18.util.TupleWritable;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -17,7 +19,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 
-import static org.apache.hadoop.io.Text.Comparator;
+import static it.unibo.bd18.stacklite.mapreduce.job2.Utils.answerCount;
+import static it.unibo.bd18.stacklite.mapreduce.job2.Utils.open;
 
 public final class OpeningRateWithParticipation implements JobProvider {
 
@@ -48,8 +51,6 @@ public final class OpeningRateWithParticipation implements JobProvider {
 
         job.setCombinerClass(Combiner.class);
         job.setReducerClass(Finisher.class);
-
-        job.setSortComparatorClass(Comparator.class);
 
         return job;
     }
@@ -83,15 +84,15 @@ public final class OpeningRateWithParticipation implements JobProvider {
                 final double averageParticipation = totalAnswers / (double) questionCount;
 
                 final Configuration conf = context.getConfiguration();
-                final String minmaxPath = conf.get("minmax.properties");
+                final String minmaxPath = conf.get(minmax.properties.path);
                 final FileSystem fs = FileSystem.get(conf);
                 final InputStream in = fs.open(new Path(minmaxPath));
 
                 final Properties props = new Properties();
                 props.load(in);
 
-                final double min = Double.parseDouble(props.getProperty("min"));
-                final double max = Double.parseDouble(props.getProperty("max"));
+                final double min = Double.parseDouble(props.getProperty(minmax.properties.min));
+                final double max = Double.parseDouble(props.getProperty(minmax.properties.max));
 
                 final String participation = discretize(averageParticipation, min, max);
 
@@ -135,6 +136,36 @@ public final class OpeningRateWithParticipation implements JobProvider {
 
     private static double normalize(double x, double min, double max) {
         return (x - min) / (max - min);
+    }
+
+    public static final class MapOutputValue extends TupleWritable {
+        public static MapOutputValue create(Question question) {
+            return new MapOutputValue(open(question), 1, answerCount(question));
+        }
+
+        public static MapOutputValue create(int openQuestions, int questionCount, int totalAnswers) {
+            return new MapOutputValue(openQuestions, questionCount, totalAnswers);
+        }
+
+        public int openQuestions() {
+            return get(0);
+        }
+
+        public int questionCount() {
+            return get(1);
+        }
+
+        public int totalAnswers() {
+            return get(2);
+        }
+
+        public MapOutputValue() {
+            super();
+        }
+
+        private MapOutputValue(int openQuestions, int questionCount, int totalAnswers) {
+            super(openQuestions, questionCount, totalAnswers);
+        }
     }
 
 }

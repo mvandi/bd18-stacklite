@@ -21,9 +21,6 @@ import static org.apache.hadoop.io.Text.Comparator;
 
 public final class OpeningRateWithParticipation implements JobProvider {
 
-    private static final double LOW_THRESHOLD = 1.0 / 3.0;
-    private static final double HIGH_THRESHOLD = 2.0 / 3.0;
-
     private final Class<?> mainClass;
     private final Configuration conf;
     private final Path inputPath;
@@ -123,14 +120,21 @@ public final class OpeningRateWithParticipation implements JobProvider {
         return MapOutputValue.create(openQuestions, questionCount, totalAnswers);
     }
 
-    private static String discretize(double averageParticipation, double min, double max) {
-        double normalization = (averageParticipation - min) / (max - min);
+    private static String discretize(double x, double min, double max) {
+        final double normalized = normalize(x, min, max);
 
-        if (normalization < LOW_THRESHOLD)
+        final double lowThreshold = 1.0 / 3.0;
+        final double highThreshold = 2.0 / 3.0;
+
+        if (normalized < lowThreshold)
             return "LOW";
-        if (normalization > HIGH_THRESHOLD)
+        if (normalized > highThreshold)
             return "HIGH";
         return "MEDIUM";
+    }
+
+    private static double normalize(double x, double min, double max) {
+        return (x - min) / (max - min);
     }
 
 }

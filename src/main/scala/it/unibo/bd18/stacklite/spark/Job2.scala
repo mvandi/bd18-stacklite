@@ -70,7 +70,6 @@ object Job2 extends StackliteSQLApp {
     @inline def apply(d: Date): String = df.format(d)
 
     private val df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
-    //yyyy-MM-dd'T'HH:mm:ss'Z'
   }
 
 }

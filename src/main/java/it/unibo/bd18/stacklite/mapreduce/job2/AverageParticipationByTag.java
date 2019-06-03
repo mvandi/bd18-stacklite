@@ -16,7 +16,7 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 
 import java.io.IOException;
 
-import static it.unibo.bd18.stacklite.mapreduce.job2.Utils.answerCount;
+import static it.unibo.bd18.stacklite.mapreduce.job2.Job2Utils.answerCount;
 
 public final class AverageParticipationByTag implements JobProvider {
 

@@ -2,10 +2,10 @@ package it.unibo.bd18.stacklite.mapreduce.job2;
 
 import it.unibo.bd18.stacklite.Question;
 
-final  class Utils {
+final class Job2Utils {
 
     static int open(Question question) {
-        return question.closedDate() == null ? 1 : 0;
+        return question.closedDate() == null ? 0 : 1;
     }
 
     static int answerCount(Question question) {
@@ -13,7 +13,7 @@ final  class Utils {
         return answerCount == null ? 0 : answerCount;
     }
 
-    private Utils() {
+    private Job2Utils() {
     }
 
 }

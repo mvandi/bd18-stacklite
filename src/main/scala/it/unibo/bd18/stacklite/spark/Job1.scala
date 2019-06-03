@@ -28,8 +28,8 @@ object Job1 extends StackliteApp {
 
     questionsRDD.join(questionTagsRDD)
       .mapPair((_, x) => (tupled(x._1.creationDate), (x._2.name, x._1.score)))
-      .groupByKey
       .partitionBy(new HashPartitioner(tuning.cpu.executorCount * 4))
+      .groupByKey
       .mapValues(_.groupByKey
         .mapValues(_.sum)
         .toSeq

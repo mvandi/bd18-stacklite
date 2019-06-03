@@ -46,6 +46,11 @@ while [[ $# -gt 0 ]]; do
             NO_SAVE=1
             shift #past argument
             ;;
+        --*)
+            echo -e "Invalid option: $1" >&2
+            usage
+            shift #past argument
+            ;;
         *)
             RESULT_PATH=$1
             shift

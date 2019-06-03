@@ -3,7 +3,6 @@ package it.unibo.bd18.stacklite.spark
 import it.unibo.bd18.app.SparkApp
 import it.unibo.bd18.stacklite.C.hdfs
 import it.unibo.bd18.stacklite.{Question, QuestionTag}
-import org.apache.hadoop.fs.FileSystem
 import org.apache.spark.rdd.RDD
 
 import scala.reflect.ClassTag

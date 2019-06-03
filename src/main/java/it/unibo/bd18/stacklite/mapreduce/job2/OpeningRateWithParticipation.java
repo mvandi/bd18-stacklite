@@ -19,8 +19,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 
-import static it.unibo.bd18.stacklite.mapreduce.job2.Utils.answerCount;
-import static it.unibo.bd18.stacklite.mapreduce.job2.Utils.open;
+import static it.unibo.bd18.stacklite.mapreduce.job2.Job2Utils.answerCount;
+import static it.unibo.bd18.stacklite.mapreduce.job2.Job2Utils.open;
 
 public final class OpeningRateWithParticipation implements JobProvider {
 
@@ -73,11 +73,11 @@ public final class OpeningRateWithParticipation implements JobProvider {
     public static final class Finisher extends Reducer<Text, MapOutputValue, Text, Text> {
         @Override
         protected void reduce(Text key, Iterable<MapOutputValue> values, Context context) throws IOException, InterruptedException {
-            final MapOutputValue value = sum(values);
+            final MapOutputValue results = sum(values);
 
-            final int openQuestions = value.openQuestions();
-            final int questionCount = value.questionCount();
-            final int totalAnswers = value.totalAnswers();
+            final int openQuestions = results.openQuestions();
+            final int questionCount = results.questionCount();
+            final int totalAnswers = results.totalAnswers();
 
             if (questionCount > 1) {
                 final double openingRate = openQuestions / (double) questionCount;

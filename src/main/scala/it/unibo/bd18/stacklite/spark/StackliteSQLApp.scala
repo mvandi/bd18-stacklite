@@ -40,7 +40,7 @@ private[spark] trait StackliteSQLApp extends SparkApp {
     def load(path: String, schema: StructType, tableName: String): DataFrame = {
       val tablePath = s"${parquet.basePath}/$tableName"
 
-      def tableExists = fs.exists(new Path(tablePath))
+      def tableExists: Boolean = fs.exists(new Path(tablePath))
 
       if (tableExists)
         return spark.read

@@ -44,7 +44,7 @@ public final class C {
     }
 
     public static final class hdfs {
-        public static final String basePath = "/user/mvandi/stacklite";
+        public static final String basePath = "/user/mvandi/exam";
 
         public static final class data {
             private static final String basePath = hdfs.basePath + "/data";

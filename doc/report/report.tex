@@ -2,14 +2,14 @@
 \usepackage[utf8]{inputenc}
 \usepackage{hyperref}
 \usepackage[pdftex]{graphicx}
-
-    
-\title{\textbf{Report on Big Data project: \\(short subtitle)}}
+\usepackage{verbatim}
+\usepackage{amsmath}
+\setlength{\parindent}{0pt}
+\title{\textbf{Report del Progetto di Big Data: \\StackLite -- Domande e tag di Stack Overflow}}
 
 \author{
-	Name Surname - Mat. 004815\\
-	Name Surname - Mat. 162342}
-	
+	Martina Magnani -- Mat. 0000855897\\
+	Mattia Vandi -- Mat. 0000850806}
 \date{\today}
 
 \begin{document}
@@ -20,18 +20,19 @@
 
 \newpage
 
+\begin{comment}
+
 \section{Teachers' notes}
 
 Each group should designate a reference user. In the local home directory of such user there must be an {\sf exam} folder exclusively containing the jobs to run (e.g., MapReduce jar, Spark scala file, Spark jar). Also, please send (either by email or by sharing a Git project) the following files.
 
-\begin{itemize}
+\begin{itemize}m
 \item The source code of the jobs; if more versions have been developed, only send the most efficient one.
 \item A text file with the commands to run the job.
 \item The PDF file of the report; use Italian/English and Latex/Word at your discretion. Be concise and go straight to the point; do not waste time and space on writing a verbose report.
 \end{itemize}
 
 This guide is based on the ``MapReduce+Spark'' kind of project. However, we remind that a different kind of project may be agreed upon.
-\\
 
 The evaluation will be based on the following.
 \begin{itemize}
@@ -47,50 +48,133 @@ Appreciated aspects.
 \item Further considerations in terms of job scalability and extensibility.
 \end{itemize}
 
+\end{comment}
 
+\section{Introduzione}
 
-\section{Introduction}
-\subsection{Dataset description}
+\subsection{Descrizione del Dataset}
 
-Please provide:
+Il \textit{dataset} che abbiamo scelto è \textit{Stacklite}\footnote{\url{https://www.kaggle.com/stackoverflow/stacklite}}; è un \textit{dataset} di StackOverflow contenente domande di programmazione e i relativi tag.
+Questo set di dati è stato estratto il 2016-10-13 18:09:48 UTC e contiene domande fino al 2016-10-12. Questo include $12583347$ domande non cancellate e $3654954$ domande cancellate.
+Si tratta di tutti i dati pubblici all'interno dello \textit{Stack Exchange Data Dump}, che è molto più completo (in quanto include anche i testi delle domande e delle risposte), ma richiederebbe un maggiore overhead computazionale per il download e l'elaborazione.
+Questo dataset è progettato per essere letto e analizzato facilmente. Allo stesso modo, questi dati possono essere esaminati all'interno di \textit{Stack Exchange Data Explorer}, ma questo offre agli analisti la possibilità di lavorare localmente usando un \textit{tool} a loro scelta.
+
+Il link al repository è il seguente:\\
+\url{https://github.com/dgrtwo/StackLite}.\\
+Mentre, il link usato per scaricare il \textit{dataset} (previa registrazione al portale) è il seguente: 
+\url{https://www.kaggle.com/stackoverflow/stacklite/downloads/stacklite.zip}.
+
+I link per il download diretto dei file sono disponibili (previa registrazione al portale) ai seguenti URLs: \url{https://www.kaggle.com/stackoverflow/stacklite/downloads/questions.csv} and \url{https://www.kaggle.com/stackoverflow/stacklite/downloads/question\_tags.csv}.
+
+\subsubsection{Descrizione dei File}
+
+I file che costituiscono il dataset sono:
+
 \begin{itemize}
-\item A brief description of the dataset.
-\item The link to the website publishing the dataset (e.g., \url{https://www1.nyc.gov/site/tlc/about/tlc-trip-record-data.page}).
-\item Direct links to the downloaded files, especially if more than one files are available in the previous link (e.g., \url{https://s3.amazonaws.com/nyc-tlc/trip+data/yellow_tripdata_2017-01.csv}).
+    \item \textit{questions.csv}: il file contiene le domande fatte su Stack Overflow. Per ogni domanda sono disponibili le seguenti informazioni:
+    \begin{itemize}
+        \item \texttt{ID}: identificativo della domanda.
+        \item \texttt{CreationDate}: data di creazione della domanda.
+        \item \texttt{ClosedDate}, data di chiusura della domanda, se disponibile.
+        \item \texttt{DeletionDate}, data di cancellazione della domanda, se disponibile.
+        \item \texttt{Score}: il punteggio assegnato alla domanda.
+        \item \texttt{OwnerUserID}: l'identificativo dell'utente che ha formulato la domanda, se disponibile.
+        \item \texttt{AnswerCount}: il numero di risposte fornite alla domanda, se disponibile.
+    \end{itemize}
+    \item \textit{question\_tags.csv}: il file contiene i tag associati alle domande. Per ogni record sono disponibili:
+    \begin{itemize}
+        \item \texttt{ID}: identificativo della domanda in cui è stato utilizzato il tag.
+        \item \texttt{Tag}: tag associato alla domanda.
+    \end{itemize}
 \end{itemize}
 
-\subsubsection{File description}
+I campi utilizzati per l'analisi sono \texttt{CreationDate}, \texttt{ClosedDate},  \texttt{Score} e \texttt{AnswerCount}.
+%
+In particolare, i campi indicati sono stati utili per:
 
-For each file, briefly indicated the available data and the fields used for the analyses; examples are welcome.
+\begin{enumerate}
+%
+    \item Mostrare in ordine descrescente i primi cinque tag che hanno ricevuto il punteggio più alto (\texttt{Score}) per ogni coppia mese-anno (\texttt{CreationDate}).
+%
+    \item Calcolare il tasso di chiusura (\texttt{ClosedDate}) e la partecipazione media per ogni tag (\texttt{AnswerCount}) e discretizzala in tre intervalli: \textit{alta}, \textit{media}, \textit{bassa}.
+%
+\end{enumerate}
 
+\section{Preparazione dei Dati}
 
-\section{Data preparation}
-
-Please provide:
 \begin{itemize}
-\item The name of the reference user (i.e., the one in whose home directory is the {\sf exam} folder).
-\item The machine name (or IP address) of the reference user.
-\item The paths to each file on HDFS and/or its corresponding location in Hive (database and table); consider relying on the structured data lake organization.
-\item A subsection with details on the pre-processing of the data (only necessary if the data is dirty and/or it contains a significant amount of useless information).
+\item Utente di riferimento: \texttt{mvandi}.
+\item Nome della macchina (o indirizzo IP): \url{http://isi-vclust9.csr.unibo.it} (\url{http://137.204.72.242}).
+\item I percorsi ad ogni file su HDFS sono: \texttt{/user/mvandi/exam/data/questions.csv} e \texttt{/user/mvandi/exam/data/question\_tags.csv}
 \end{itemize}
-
 
 \section{Jobs}
 
-One subsection for each job.
+In questa sezione mostriamo, nel dettaglio, i job creati.
+Lo script da lanciare per eseguire un Job (che si trova al percorso \texttt{/user/mvandi/exam}), è il seguente:
+\texttt{./run.sh [options] <output\_path>}.
 
-\subsection{Job \#1: short description}
+Opzioni:
+\begin{itemize}
+    \item \texttt{--mapreduce}: per eseguire il Job in Apache Hadoop MapReduce.
+    \item \texttt{--spark}: per eseguire il Job in Apache Spark 2.
+    \item \texttt{--job <job\_n>}: numero del Job da eseguire (1 o 2).
+    \item \texttt{--no-save}: per mantenere l'output del job su HDFS senza spostarlo nella cartella locale da cui è stato eseguiro il comando.
+\end{itemize}
 
-Provide a brief, general description of the job. Then, one subsubsection for each implementation.
+\subsection{Job \#1: breve descrizione}
 
-\subsubsection{MapReduce/Spark(SQL) implementation}
+L'obiettivo di questo Job è determinare per ogni coppia mese-anno i cinque tag che hanno ricevuto il punteggio più alto in ordine decrescente.
+
+Attraverso questa interrogazione è possibile osservare quali tag sono di maggiore interesse per gli utenti di StackOverflow e come gli interessi degli stessi cambiano nel tempo.
+
+\subsubsection{Implementazione in MapReduce}
+Il comando per eseguire il Job è il seguente:\\
+\texttt{./run.sh --mapreduce --job 1 [options] <output\_path>}.
+
+\`E possibile specificare l'opzione \texttt{--no-save} per mantenere l'output del job su HDFS senza spostarlo nella cartella locale da cui è stato eseguiro il comando.
+
+\begin{itemize}
+\item Link diretti alla cronologia dell'applicazione su YARN:
+\begin{enumerate}
+    \item \url{http://isi-vclust0.csr.unibo.it:8088/proxy/application_1552648127930_3238}
+    \item \url{http://isi-vclust0.csr.unibo.it:8088/proxy/application_1552648127930_3240/}
+\end{enumerate}
+\item File di Input:
+\begin{itemize}
+\item \texttt{/user/mvandi/exam/data/questions.csv}.
+\item \texttt{/user/mvandi/exam/data/question\_tags.csv}.
+\end{itemize}
+\item File di Output: il \textit{path} del file di Output è fornito dall'utente che esegue lo script.
+\end{itemize}
+
+Per soddisfare questa interrogazione sono stati realizzati due Job:
+
+\begin{itemize}
+    \item \texttt{Join}; per effettuare il join tra il file contenente le domande e il file contenente i tag relativi alle domande.
+    \item \texttt{HighestScoreTags}; per calcolare i tag più votati per ogni coppia mese-anno.
+\end{itemize}
+
+\paragraph{Join}
+
+L'obiettivo della fase di join è quello di ottenere un file con le seguenti coppie chiave-valore: \texttt{<<year, month>,<tag, score>>}.
+
+Per realizzare tale obiettivo, durante la fase di mapping, ogni record viene trasformato in una coppia \texttt{<ID, Question>} nel caso si stia elaborando il file delle domande, mentre in caso si stia elaborando il file dei tag ogni record viene trasformato in una coppia \texttt{<ID, QuestionTag>}.
+
+Durante la fase di reduce per ogni coppia \texttt{<Question, QuestionTag>} viene estratta ed utilizzata come chiave la coppia \texttt{<year, month>}, mentre la coppia \texttt{<tag, score>} viene utilizzata come valore.
+
+\paragraph{HighestScoreTags}
+
+L'obiettivo di questa fase è quello di ottenere una lista dei primi cinque tag che hanno ricevuto il punteggio più alto per ogni coppia \texttt{<year, month>}.
+
+Per realizzare tale obiettivo, durante la fase di combining per ogni coppia \texttt{<year, month>} vengono sommati i punteggi di ogni tag ottenuti come output della fase di join. L'utilizzo del combiner ha permesso di risparmiare una parte di lavoro al reducer.
+
+Durante la fase di reduce vengono ulteriormente sommati i punteggi di ogni tag, ordinati per punteggio in ordine decrescente e scelti i primi cinque.
+
+\begin{comment}
 
 Please provide:
 \begin{itemize}
-\item The command to run the job from the reference user's home directory; explain possibly different parameter configurations.
-\item Direct link to the application's history on YARN (e.g., \url{http://isi-vclust0.csr.unibo.it:18088/history/application_15...}).
-\item Input files/tables.
-\item Output files/tables.
 \item Description of the implementation. A schematic and concise discussion is preferrable to a verbose narrative. Focus on how the data is manipulated in the job (e.g., what do keys and values represent across the different stages, what operations are carried out). 
 \item Performance considerations with respect the (potentially) carried out optimizations, e.g., in terms of:
 \begin{itemize}
@@ -104,8 +188,240 @@ Please provide:
 \item Short extract of the output and discussion (i.e., whether there is any relevant insight obtained).
 \end{itemize}
 
-\section{Miscellaneous}
+\end{comment}
 
-If necessary, feel free to add sections to explain any other relevant information.
+\subsubsection{Implementazione in  Spark}
+Il comando per eseguire il Job è il seguente:\\
+\texttt{./run.sh --spark --job 1 [options] <output\_path>}
+
+\`E possibile specificare l'opzione \texttt{--no-save} per mantenere l'output del job su HDFS senza spostarlo nella cartella locale da cui è stato eseguiro il comando.
+
+\begin{itemize}
+\item Link diretto alla cronologia dell'applicazione su YARN: \url{http://isi-vclust0.csr.unibo.it:18089/history/application_1552648127930_3187/jobs/}.
+\item File di Input:
+\begin{itemize}
+\item \texttt{/user/mvandi/exam/data/questions.csv} e\\
+\item \texttt{/user/mvandi/exam/data/question\_tags.csv}.
+\end{itemize}
+\item File di Output: il \textit{path} del file di Output è fornito dall'utente che esegue lo script.
+\end{itemize}
+
+Dapprima vengono creati due RDD, il primo contenente tutte le domande e il secondo contenente tutti i tag realtivi alle domande formulate; di seguito viene applicato un filtro al primo RDD (quello contenente le domande) per selezionare le sole domande che sono state formulate dal 1 Gennaio 2012 al 31 Dicembre 2014; di seguito, per entrambi gli RDD, vengono raggruppati gli elementi per l'identificatore della domanda.
+
+A questo punto è possibile effettuare il join per chiave tra i due RDD, di seguito gli elementi dell'RDD vengono trasformati in delle coppie \texttt{<<year, month>, <tag, score>>}, dove la coppia \texttt{<year, month>} rappresenta la coppia anno-mese in cui è stata formulata la domanda e la coppia \texttt{<tag, score>} rappresenta la coppia tag utilizzato per la domanda e relativo punteggio ottenuto. Di seguito viene effettuato il partizionamento dei valori utilizzando un \texttt{HashPartitioner} e vengono raggruppati per chiave (coppia \texttt{<year, month>}).
+
+I valori vengono raggruppati per chiave (\texttt{score}) e viene calcolata la somma dei punteggi ottenuti, i valori vengono ordinati per punteggio in ordine decrescente (dal più grande al più piccolo) e vengono selezionati i primi cinque elementi.
+
+Infine, vengono trasformati gli elementi in stringa e salvati in un file di testo al percorso di output specificato dall'utente.
+
+\subsubsection{Conclusioni}
+
+L'utilizzo di Apache Spark ha agevolato la scrittura del job in questione, oltre a migliorare la qualità del codice grazie al suo stile funzionale. A differenza dell'implementazione in Apache Hadoop MapReduce, la quale, pur non avendo una complessità elevata, ha reso necessaria la scrittura di molto codice.
+
+Nonostante questo, il tempo di esecuzione in Apache Spark è stato maggiore rispetto a quello della sua controparte in Apache Hadoop MapReduce.
+
+\begin{comment}
+
+Please provide:
+\begin{itemize}
+\item Description of the implementation. A schematic and concise discussion is preferrable to a verbose narrative. Focus on how the data is manipulated in the job (e.g., what do keys and values represent across the different stages, what operations are carried out). 
+\item Performance considerations with respect the (potentially) carried out optimizations, e.g., in terms of:
+\begin{itemize}
+\item allocated resources and tasks;
+\item enforced partitioning;
+\item data caching;
+\item combiner usage;
+\item broadcast variables usage;
+\item any other kind of optimization.
+\end{itemize}
+\item Short extract of the output and discussion (i.e., whether there is any relevant insight obtained).
+\end{itemize}
+
+\end{comment}
+
+\subsection{Job \#2: breve descrizione}
+Questo Job ha l'obiettivo di calcolare, per ogni tag, il tasso di chiusura e mostrare la partecipazione media discretizzandola in: alta, media, bassa.\\
+Con \textit{tasso di chiusura} si intende il numero di domande aperte rispetto al totale.\\
+Con \textit{partecipazione media} si intende il rapporto tra il numero di risposte, e il numero totale di domande.
+\\\\
+Attraverso questa interrogazione, è possibile mettere in relazione i due valori calcolati e valutare, per esempio, se un certo tag si riferisce ad argomenti di nicchia o argomenti difficili.\\
+Infatti, un tag con \textbf{basso} tasso di chiusura e:
+\begin{itemize}
+    \item partecipazione \textbf{medio/bassa}, potrebbe significare che il tag è relativo ad argomenti poco conosciuti.
+    \item partecipazione \textbf{alta}, potrebbe significare che il tag è relativo ad un argomento ostico da risolvere per la comunità di StackOverflow.
+\end{itemize}
+
+Per quanto riguarda la \textbf{discretizzazione} della \textit{partecipazione media}, abbiamo pensato di normalizzare la partecipazione media $p_i$, in un intervallo $\left[0,1\right]$; applicando la seguente formula:
+\begin{equation} \label{eq1}
+n_i = \text{normalize}\left(p_i\right) = \frac{p_i - \min\left(P\right)}{\max\left(P\right) - \min\left(P\right)}
+\end{equation}
+
+dove:
+\begin{itemize}
+    \item $p_i$ è la partecipazione media per il tag $i$-esimo.
+    \item $P$ è l'insieme delle partecipazioni medie.
+\end{itemize}
+
+A questo punto, è possibile identificare le tre fasce di partecipazione, come segue:
+\begin{enumerate}
+    \item \textbf{partecipazione bassa} se $n_i < \frac{1}{3}$;
+    \item \textbf{partecipazione media} se $\frac{1}{3} \leq n_i \leq \frac{2}{3}$;
+    \item \textbf{partecipazione alta} se $n_i > \frac{2}{3}$.
+\end{enumerate}
+
+\subsubsection{Implementazione in MapReduce}
+Il comando per eseguire il Job è il seguente:\\
+\texttt{./run.sh --mapreduce --job 2 [options] <output\_path>}.
+
+\`E possibile specificare l'opzione \texttt{--no-save} per mantenere l'output del job su HDFS senza spostarlo nella cartella locale da cui è stato eseguito il comando.
+
+\begin{itemize}
+\item Link diretti alla cronologia dell'applicazione su YARN:
+\begin{enumerate}
+    \item \url{http://isi-vclust0.csr.unibo.it:8088/proxy/application_1552648127930_3239/}
+    \item \url{http://isi-vclust0.csr.unibo.it:8088/proxy/application_1552648127930_3241/}
+    \item \url{http://isi-vclust0.csr.unibo.it:8088/proxy/application_1552648127930_3242/}
+    \item \url{http://isi-vclust0.csr.unibo.it:8088/proxy/application_1552648127930_3243/}
+\end{enumerate}
+\item File di Input:
+\begin{itemize}
+\item \texttt{/user/mvandi/exam/data/questions.csv} e\\
+\item \texttt{/user/mvandi/exam/data/question\_tags.csv}.
+\end{itemize}
+\item File di Output: Il \textit{path} del file di Output è fornito dall'utente che esegue lo script.
+\end{itemize}
+
+Con il paradigma \textit{MapReduce}, per soddisfare l'interrogazione sopra descritta, è stato necessario realizzare più job di map-reduce.\\
+In particolare, si sono resi necessari due job per l'estrazione della partecipazione media minima e della partecipazione media massima.
+Infatti, questi due valori non potevano essere calcolati direttamente nel Job \texttt{OpeningRateWithPaticipation}, in quanto in tale Job il raggruppamento è stato fatto per tag. Quindi i \texttt{Reducer} finali sono a conoscenza della sola partecipazione media relativa al tag (chiave) a loro assegnato; di conseguenza non possono effettuare confronti con le partecipazioni medie degli altri tag.
+\\\\
+Di seguito, i Job implementati:
+\begin{itemize}
+    \item \texttt{Join}; per effettuare il join tra i due file in input; quello contenente le domande e quello contenente i tag relativi alle domande.
+    \item \texttt{AverageParticipationByTag}; per calcolare la partecipazione media di ogni tag.
+    \item \texttt{MinMax}; per calcolare la partecipazione media minima e la partecipazione media massima tra tutti i tag.
+    \item \texttt{OpeningRateWithPaticipation}; per calcolare il tasso di chiusura e discretizzare la partecipazione media per ogni tag.
+\end{itemize}
+
+\paragraph{Join}
+Il Job seguente è stato necessario per unire i due file di input, in un unico file di output, contenente le seguenti coppie chiave-valore: \texttt{<<tag>,<questions>>}.
+
+Per realizzare tale obiettivo, durante la fase di \textbf{mapping}, ogni record viene trasformato in una coppia \texttt{<ID, Question>} nel caso si stia elaborando il \textbf{file delle domande}, mentre in caso si stia elaborando il \textbf{file dei tag} ogni record viene trasformato in una coppia \texttt{<ID, QuestionTag>}.
+
+Durante la fase di \textbf{reduce} per ogni coppia \texttt{<Question, QuestionTag>} viene estratto ed utilizzato come chiave il \texttt{tag}, mentre la domanda \texttt{question} viene utilizzata come valore.
+
+\paragraph{AverageParticipationByTag}
+Questo Job ha il compito di calcolare la partecipazione media di ogni tag (rapporto 
+tra il numero di risposte e il numero totale di domande).
+Il file di input contiene coppie della forma: \texttt{<tag,questions>}.\\
+Mentre il file di output deve contenere le seguenti coppie chiave-valore:\\
+\texttt{<tag,averageParticipation>}
+
+In questo caso, nella fase di \textbf{mapping}, per ogni domanda viene estratto il numero di risposte al fine di passare al \texttt{Combiner}, record nella forma: \\
+\texttt{<tag,<questionCount,totalAnswers>>}.\\
+Se il valore dell'\texttt{answerCount} è \texttt{null} vuol dire che la domanda in esame non ha ricevuto risposta e quindi ritorniamo \texttt{0}, altrimenti ritorniamo l'\texttt{answerCount}.
+Il \texttt{questionCount} è necessario al \texttt{Reducer} per calcolare la partecipazione media.
+
+Nella fase di \textbf{combining}, vengono aggregati i valori attraverso una funzione di somma.
+
+Anche nella fase di \textbf{reduce} viene aggregato il valore attraverso la funzione di somma e infine calcolata la partecipazione media. Il risultato è un file contenente record nella forma: \texttt{<tag,averageParticipation>}
+
+\paragraph{MinMax}
+Questo Job, dato il file di input con le coppie\\
+\texttt{<tag,averageParticipation>}, ha il compito di estrarre la partecipazione media minima e la partecipazione media massima tra tutti i tag.
+
+Per realizzare tale obiettivo, nella fase di \textbf{mapping} viene scritto un file con record nella forma:\\ \texttt{<0,<averageParticipation><averageParticipation>>}.
+Viene settata la stessa chiave (0) per tutti i record, perché è necessario trovare la partecipazione media minima e massima tra tutti i record e quindi il confronto deve essere fatto tra tutti i valori; di conseguenza è necessaria un'unica chiave.
+
+Nella fase di \textbf{combing} viene fatta un primo confronto delle\\
+\texttt{averageParticipation}, per trovare il minimo e massimo locale al nodo.
+
+Nella fase di \textbf{reduce} vengono estratte la partecipazione media minima e la partecipazione media massima finali.
+
+In questo Job non viene scritto (\texttt{context.write}) nessun file di output, ma vengono settate due Java \texttt{Properties}, per memorizzare i valori di minimo e di massimo.
+La classe \texttt{Properties} rappresenta un insieme di proprietà, nella forma chiave-valore, che possono essere salvate in uno \textit{stream} di dati e/o caricate da uno \textit{stream} di dati. Ogni chiave e il suo valore corrispondente nell'elenco delle proprietà è una stringa.
+Abbiamo usato i metodi \texttt{load} e \texttt{store} per caricare e memorizzare le proprietà da/verso lo \textit{stream} di input/output di HDFS.
+
+\`E stato scelto di utilizzare le properties Java per evitare un ulteriore join tra il risultato della fase di join e il risultato della fase di estrazione del minimo e del massimo.
+
+\paragraph{OpeningRateWithPaticipation}
+Il Job in esame è quello finale; infatti ha l'obiettivo di calcolare, per ogni tag, il tasso di apertura e di discretizzare la partecipazione media in alta, media o bassa.
+
+Il \textbf{Mapper} prende in input il file generato nella fase di Join, quindi quello contenente le coppie \texttt{<tag,questions>}, esegue il mapping del valore in input nella corrispondente classe java \texttt{Questions} e scrive un file con coppie nella forma: \texttt{<<tag>,<<openQuestions><questionCount><totalAnswers>>>}.
+Ovviamente nella fase di mapping, dato che si gestisce una domanda alla volta, in \texttt{openQuestions} ci sarà o $0$ o $1$ a seconda se la domanda è stata chiusa o meno. Per lo stesso motivo, nel \texttt{questionCount} ci sarà un 1 (rappresentante la domanda corrente) e in \texttt{totalAnswers} il numero di risposte ottenute dalla domanda in esame.
+
+Il \textbf{Combiner} esegue una pre-aggregazione dei dati sommando
+\texttt{openQuestions}, \texttt{questionCount} e \texttt{totalAnswers}.
+
+Il \textbf{Reducer} esegue la somma finale di tutti i valori relativi allo stesso tag; e con i risultati ottenuti calcola il tasso di apertura (\texttt{openingRate}) e la partecipazione media (\texttt{averageParticipation}) degli utenti.
+
+A questo punto, il \textbf{Reducer} può caricare le \texttt{Properties}, relative alla partecipazione media minima e massima calcolate nel Job \texttt{MinMax}, e infine discretizzare la partecipazione media del tag nelle fasce \textit{bassa}, \textit{media} e \textit{alta}
+
+\begin{comment}
+
+Please provide:
+\begin{itemize}
+\item Description of the implementation. A schematic and concise discussion is preferrable to a verbose narrative. Focus on how the data is manipulated in the job (e.g., what do keys and values represent across the different stages, what operations are carried out). 
+\item Performance considerations with respect the (potentially) carried out optimizations, e.g., in terms of:
+\begin{itemize}
+\item allocated resources and tasks;
+\item enforced partitioning;
+\item data caching;
+\item combiner usage;
+\item broadcast variables usage;
+\item any other kind of optimization.
+\end{itemize}
+\item Short extract of the output and discussion (i.e., whether there is any relevant insight obtained).
+\end{itemize}
+
+\end{comment}
+
+\subsubsection{Implementazione in SparkSQL}
+Il comando per eseguire il Job è il seguente:\\
+\texttt{./run.sh --spark --job 2 [options] <output\_path>}.
+
+\`E possibile specificare l'opzione \texttt{--no-save} per mantenere l'output del job su HDFS senza spostarlo nella cartella locale da cui è stato eseguiro il comando.
+
+\begin{itemize}
+\item Link diretto alla cronologia dell'applicazione su YARN: \url{http://isi-vclust0.csr.unibo.it:18089/history/application_1552648127930_3237/jobs/}.
+\item File di Input:
+\begin{itemize}
+\item \texttt{/user/mvandi/exam/data/questions.csv} e\\
+\item \texttt{/user/mvandi/exam/data/question\_tags.csv}.
+\end{itemize}
+\item File di Output: Il percorso del file di Output è fornito dall'utente che esegue lo script.
+\end{itemize}
+
+In questo Job SparkSQL vengono creati innanzitutto due \texttt{DataFrame} relativi ai file \textit{.csv} di input. Durante il \textit{load} dei file, viene controllato se esistono già le relative tabelle Parquet:
+\begin{itemize}
+    \item se esistono, i \texttt{DataFrame} vengono creati a partire da queste al fine di ottimizzare i tempi di caricamento; infatti l'accesso alle tabelle Parquet è più veloce rispetto ai file memorizzati in HDFS.
+    \item se non esistono, i \texttt{DataFrame} vengono creati a partire dai file \textit{.csv} e subito dopo create le rispettive tabelle Parquet.
+\end{itemize}
+
+Una volta creati i due \texttt{DataFrame}: \texttt{questionsDF} e \texttt{questionsTagDF} è possibile ottenere i risultati richiesti, eseguendo operazioni \textit{sql-like}.
+
+Da \texttt{questionsDF} si filtrano le domande che hanno una \texttt{creationDate} compresa tra \textit{2012-01-01T00:00:00Z} e \textit{2014-12-31T23:59:59Z} e quelle che non sono state cancellate; quindi con \texttt{deletionDate} uguale a \texttt{null}.
+Dopo di che si esegue il \texttt{join} tra i due \texttt{DataFrame}.
+
+Di seguito elencheremo le operazioni effettuate sul \texttt{DataFrame} ottenuto tramite join:
+\begin{enumerate}
+    \item \texttt{withColumn}; si aggiunge una colonna \texttt{openQuestions}; se \texttt{closedDate} è \texttt{null} avrà valore 0, altrimeni 1.
+    \item \texttt{groupBy}; si raggruppano i record per \texttt{tag} aggregando i valori di \texttt{openQuestions} tramite somma; allo stesso modo quelli in \texttt{answerCount}; e creando una nuova colonna \texttt{questionCount} rappresentante il numero di record (= numero di domande per tag).
+    \item \texttt{where}; si filtrano i tag che compaiono in più di una domanda (\texttt{questionCount} maggiore di 1).
+    \item \texttt{withColumn}; si aggiunge una colonna per calcolare la partecipazione media; \texttt{averageParticipation} è determinata dal rapporto tra \texttt{totalAnswers} e \texttt{questionCount}.
+    \item \texttt{cache}; si fa il cache del \texttt{DataFrame} in memoria al fine di memorizzare le operazioni effettuate.
+\end{enumerate}
+
+A questo punto è possibile individuare la partecipazione media minima e massima, utilizzando gli operatori di minimo e di massimo forniti dalle librerie di SparkSQL. In particolare, eseguiamo un \texttt{crossJoin} del \texttt{DataFrame} precedentemente creato con un secondo \texttt{DataFrame} che ha come unico record i valori di \texttt{minParticipation} e \texttt{maxParticipation}.
+
+Con queste informazioni, è ora possibile eseguire la discretizzazione della partecipazione media e calcolare il tasso di apertura per tutti i tag.
+
+Il risultato, infine, viene scritto su Parquet.
+
+\subsubsection{Conclusioni}
+
+L'utilizzo di Apache Spark SQL ha permesso di migliorare notevolmente i tempi di esecuzione rispetto allo stesso job implementato in Apache Hadoop MapReduce, oltre a migliorare la qualità del codice grazie al suo stile funzionale.
+
+L'utilizzo di un linguaggio di interrogazione SQL-like ha reso immediata la scrittura del job in questione; a differenza dell'implementazione in Apache Hadoop MapReduce, la quale ha richiesto uno sforzo maggiore e non si è dimostrata triviale.
 
 \end{document}

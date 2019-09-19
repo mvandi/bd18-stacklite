@@ -197,7 +197,9 @@ Il comando per eseguire il Job è il seguente:\\
 \`E possibile specificare l'opzione \texttt{--no-save} per mantenere l'output del job su HDFS senza spostarlo nella cartella locale da cui è stato eseguiro il comando.
 
 \begin{itemize}
-\item Link diretto alla cronologia dell'applicazione su YARN: \url{http://isi-vclust0.csr.unibo.it:18089/history/application_1552648127930_3187/jobs/}.
+\item Link diretto alla cronologia dell'applicazione su YARN:
+%\url{http://isi-vclust0.csr.unibo.it:18089/history/application_1552648127930_3187/jobs/}.
+\url{http://isi-vclust0.csr.unibo.it:18089/history/application\_1560510165054\_2134/jobs/}
 \item File di Input:
 \begin{itemize}
 \item \texttt{/user/mvandi/exam/data/questions.csv} e\\
@@ -206,9 +208,11 @@ Il comando per eseguire il Job è il seguente:\\
 \item File di Output: il \textit{path} del file di Output è fornito dall'utente che esegue lo script.
 \end{itemize}
 
-Dapprima vengono creati due RDD, il primo contenente tutte le domande e il secondo contenente tutti i tag realtivi alle domande formulate; di seguito viene applicato un filtro al primo RDD (quello contenente le domande) per selezionare le sole domande che sono state formulate dal 1 Gennaio 2012 al 31 Dicembre 2014; di seguito, per entrambi gli RDD, vengono raggruppati gli elementi per l'identificatore della domanda.
+Dapprima vengono creati due RDD, il primo contenente tutte le domande e il secondo contenente tutti i tag realtivi alle domande formulate; di seguito viene applicato un filtro al primo RDD (quello contenente le domande) per selezionare le sole domande che sono state formulate dal 1 Gennaio 2012 al 31 Dicembre 2014; di seguito, per entrambi gli RDD, vengono raggruppati gli elementi per l'identificatore della domanda e partizionati utilizzando un \texttt{partitioner} comune. A questo punto è possibile effettuare il join tra i due RDD utilizzando come chiave l'ID della domanda.
 
-A questo punto è possibile effettuare il join per chiave tra i due RDD, di seguito gli elementi dell'RDD vengono trasformati in delle coppie \texttt{<<year, month>, <tag, score>>}, dove la coppia \texttt{<year, month>} rappresenta la coppia anno-mese in cui è stata formulata la domanda e la coppia \texttt{<tag, score>} rappresenta la coppia tag utilizzato per la domanda e relativo punteggio ottenuto. Di seguito viene effettuato il partizionamento dei valori utilizzando un \texttt{HashPartitioner} e vengono raggruppati per chiave (coppia \texttt{<year, month>}).
+L'utilizzo di un partitioner ha permesso di ridurre il costo di shuffling, ottimizzando notevolmente le prestazioni. Infatti, in fase di join, i dati con la stessa chiave si trovano già nella stessa partizione, di conseguenza non è necessario un ulteriore shuffling dei dati.
+
+Di seguito gli elementi dell'RDD vengono trasformati in delle coppie \texttt{<<year, month>, <tag, score>>}, dove la coppia \texttt{<year, month>} rappresenta la coppia anno-mese in cui è stata formulata la domanda e la coppia \texttt{<tag, score>} rappresenta la coppia tag utilizzato per la domanda e relativo punteggio ottenuto. Di seguito gli elementi vengono raggruppati per chiave (coppia \texttt{<year, month>}).
 
 I valori vengono raggruppati per chiave (\texttt{score}) e viene calcolata la somma dei punteggi ottenuti, i valori vengono ordinati per punteggio in ordine decrescente (dal più grande al più piccolo) e vengono selezionati i primi cinque elementi.
 
@@ -218,7 +222,7 @@ Infine, vengono trasformati gli elementi in stringa e salvati in un file di test
 
 L'utilizzo di Apache Spark ha agevolato la scrittura del job in questione, oltre a migliorare la qualità del codice grazie al suo stile funzionale. A differenza dell'implementazione in Apache Hadoop MapReduce, la quale, pur non avendo una complessità elevata, ha reso necessaria la scrittura di molto codice.
 
-Nonostante questo, il tempo di esecuzione in Apache Spark è stato maggiore rispetto a quello della sua controparte in Apache Hadoop MapReduce.
+I tempi di esecuzione dei due job (quello in Apache Hadoop MapReduce e Apache Spark) sono simili.
 
 \begin{comment}
 

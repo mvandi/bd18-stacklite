@@ -20,22 +20,24 @@ object Job1 extends StackliteApp {
   Utils.deleteIfExists(fs, true, new Path(resultPath))
 
   val outputRDD = {
+    val partitioner = new HashPartitioner(tuning.cpu.executorCount * 4)
     val questionsRDD = this.questionsRDD
       .filter(_.creationDate.between(dates.startDate, dates.endDate))
       .keyBy(_.id)
+      .partitionBy(partitioner)
 
-    val questionTagsRDD = this.questionTagsRDD.keyBy(_.id)
+    val questionTagsRDD = this.questionTagsRDD
+      .keyBy(_.id)
+      .partitionBy(partitioner)
 
     questionsRDD.join(questionTagsRDD)
       .mapPair((_, x) => (tupled(x._1.creationDate), (x._2.name, x._1.score)))
-      .partitionBy(new HashPartitioner(tuning.cpu.executorCount * 4))
       .groupByKey
       .mapValues(_.groupByKey
         .mapValues(_.sum)
         .toSeq
         .sortBy(-_._2)
         .take(5)
-        //.map(_._1)
         .mkString("[", ", ", "]"))
       .sortByKey(ascending = false)
       .mapPair(_ + "\t" + _)

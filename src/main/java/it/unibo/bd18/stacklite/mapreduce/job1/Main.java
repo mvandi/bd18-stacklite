@@ -37,7 +37,7 @@ public final class Main extends Configured implements Tool {
             if (!fs.exists(joinPath))
                 cj.add(new Join(mainClass, conf, questionsPath, questionTagsPath, joinPath));
 
-            return new CompositeJob()
+            return cj
                     .add(new HighestScoreTags(mainClass, conf, joinPath, resultPath))
                     .waitForCompletion(true) ? 0 : 1;
         }

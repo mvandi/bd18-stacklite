@@ -3,7 +3,6 @@ package it.unibo.bd18.util;
 import org.apache.commons.lang.Validate;
 import org.apache.hadoop.mapreduce.Job;
 
-import java.util.Arrays;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;

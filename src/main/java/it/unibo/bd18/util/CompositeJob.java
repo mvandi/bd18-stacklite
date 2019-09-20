@@ -95,7 +95,10 @@ public final class CompositeJob {
     }
 
     private CompositeJob addInternal(JobProvider[] jobs) {
-        return addInternal(Arrays.asList(jobs));
+        for (final JobProvider provider : jobs) {
+            addInternal(provider);
+        }
+        return this;
     }
 
     private void checkDefine() {

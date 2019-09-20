@@ -18,29 +18,33 @@ public final class Main extends Configured implements Tool {
     public int run(String... args) throws Exception {
         final Path questionsPath = new Path(hdfs.data.questions);
         final Path questionTagsPath = new Path(hdfs.data.questionTags);
-        final String resultPathStr = args[0];
-        final Path joinPath = new Path(resultPathStr + "-join");
-        final Path averageParticipationByTagPath = new Path(resultPathStr + "-temp");
-        final String minmaxPathStr = resultPathStr + "-minmax.properties";
+
+        final Path resultPath = new Path(args[0]);
+
+        final Path joinPath = new Path(hdfs.cache.job2.join);
+        final Path averageParticipationByTagPath = new Path(hdfs.cache.job2.averageParticipationByTag);
+        final String minmaxPathStr = hdfs.cache.job2.minmax;
         final Path minmaxPath = new Path(minmaxPathStr);
-        final Path resultPath = new Path(resultPathStr);
 
         final Configuration conf = getConf();
         final Class mainClass = getClass();
 
         try (final FileSystem fs = FileSystem.get(conf)) {
-            Utils.deleteIfExists(fs, true, resultPath, joinPath, averageParticipationByTagPath, minmaxPath);
-            try {
-                conf.set(minmax.properties.path, minmaxPathStr);
-                return new CompositeJob()
-                        .add(new Join(mainClass, conf, questionsPath, questionTagsPath, joinPath))
-                        .add(new AverageParticipationByTag(mainClass, conf, joinPath, averageParticipationByTagPath))
-                        .add(new MinMax(mainClass, conf, averageParticipationByTagPath))
-                        .add(new OpeningRateWithParticipation(mainClass, conf, joinPath, resultPath))
-                        .waitForCompletion(true) ? 0 : 1;
-            } finally {
-                Utils.deleteIfExists(fs, true, joinPath, averageParticipationByTagPath, minmaxPath);
-            }
+            Utils.deleteIfExists(fs, true, resultPath);
+            conf.set(minmax.properties.path, minmaxPathStr);
+
+            final CompositeJob cj = new CompositeJob();
+
+            if (!fs.exists(joinPath))
+                cj.add(new Join(mainClass, conf, questionsPath, questionTagsPath, joinPath));
+            if (!fs.exists(averageParticipationByTagPath))
+                cj.add(new AverageParticipationByTag(mainClass, conf, joinPath, averageParticipationByTagPath));
+            if (!fs.exists(minmaxPath))
+                cj.add(new MinMax(mainClass, conf, averageParticipationByTagPath));
+
+            return cj
+                    .add(new OpeningRateWithParticipation(mainClass, conf, joinPath, resultPath))
+                    .waitForCompletion(true) ? 0 : 1;
         }
     }
 

@@ -57,6 +57,32 @@ public final class C {
             }
         }
 
+        public static final class cache {
+            private static final String basePath = hdfs.basePath + "/cache";
+
+            public static final class job1 {
+                private static final String basePath = cache.basePath + "/job1";
+
+                public static final String join = basePath + "/join";
+
+                private job1() {
+                }
+            }
+
+            public static final class job2 {
+                private static final String basePath = cache.basePath + "/job2";
+
+                public static final String join = basePath + "/join";
+
+                public static final String averageParticipationByTag = basePath + "/averageParticipationByTag";
+
+                public static final String minmax = basePath + "/minmax.properties";
+
+                private job2() {
+                }
+            }
+        }
+
         private hdfs() {
         }
     }

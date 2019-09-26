@@ -14,7 +14,7 @@ import org.apache.spark.{HashPartitioner, SparkConf}
   */
 object Job1 extends StackliteApp {
 
-  override protected[this] val conf: SparkConf = new SparkConf().setAppName("z")
+  override protected[this] val conf: SparkConf = new SparkConf().setAppName("Job1")
 
   val resultPath = args(0)
   Utils.deleteIfExists(fs, true, new Path(resultPath))
@@ -39,7 +39,7 @@ object Job1 extends StackliteApp {
         .sortBy(-_._2)
         .take(5)
         .mkString("[", ", ", "]"))
-      .sortByKey(ascending = false)
+      //.sortByKey(ascending = false)
       .mapPair(_ + "\t" + _)
   }
 

@@ -61,7 +61,7 @@ public final class C {
             private static final String basePath = hdfs.basePath + "/cache";
 
             public static final class job1 {
-                private static final String basePath = cache.basePath + "/job1";
+                public static final String basePath = cache.basePath + "/job1";
 
                 public static final String join = basePath + "/join";
 
@@ -70,7 +70,7 @@ public final class C {
             }
 
             public static final class job2 {
-                private static final String basePath = cache.basePath + "/job2";
+                public static final String basePath = cache.basePath + "/job2";
 
                 public static final String join = basePath + "/join";
 

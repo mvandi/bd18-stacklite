@@ -9,7 +9,7 @@ import org.apache.spark.sql.types._
 
 private[spark] trait StackliteSQLApp extends SparkApp {
 
-  protected[this] final lazy val questionsDF = parquet.load(hdfs.data.questions, StructType(
+  protected[this] final lazy val questionsDF = parquet.load(parquet.tables.questions, hdfs.data.questions, StructType(
     Seq(
       StructField("id", IntegerType, nullable = false),
       StructField("creationDate", TimestampType, nullable = false),
@@ -19,17 +19,17 @@ private[spark] trait StackliteSQLApp extends SparkApp {
       StructField("ownerUserId", IntegerType, nullable = true),
       StructField("answerCount", IntegerType, nullable = true)
     )
-  ), parquet.tables.questions).na.fill(0, Seq("answerCount"))
+  )).na.fill(0, Seq("answerCount"))
 
-  protected[this] lazy val questionTagsDF = parquet.load(hdfs.data.questionTags, StructType(
+  protected[this] lazy val questionTagsDF = parquet.load(parquet.tables.questionTags, hdfs.data.questionTags, StructType(
     Seq(
       StructField("id", IntegerType, nullable = false),
       StructField("name", StringType, nullable = false)
     )
-  ), parquet.tables.questionTags)
+  ))
 
   private[this] object parquet {
-    private val basePath = s"${hdfs.basePath}/parquet-tables"
+    private val basePath = hdfs.cache.job2.basePath
 
     object tables {
       val questions = "questions"
@@ -37,12 +37,10 @@ private[spark] trait StackliteSQLApp extends SparkApp {
       val questionTags = "questionTags"
     }
 
-    def load(path: String, schema: StructType, tableName: String): DataFrame = {
-      val tablePath = s"${parquet.basePath}/$tableName"
+    def load(tableName: String, path: String, schema: StructType): DataFrame = {
+      val tablePath = s"${parquet.basePath}/$tableName.parquet"
 
-      def tableExists: Boolean = fs.exists(new Path(tablePath))
-
-      if (tableExists)
+      if (fs.exists(new Path(tablePath)))
         return spark.read
           .schema(schema)
           .parquet(tablePath)
